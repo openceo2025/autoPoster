@@ -7,7 +7,7 @@ A simple REST API that receives post requests and forwards them to various servi
 1. Copy `config.sample.json` to `config.json` and fill in your account details.
 2. Install dependencies:
    ```bash
-   pip install fastapi uvicorn
+   pip install -r requirements.txt
    ```
 3. Run the server:
    ```bash
