@@ -5,6 +5,18 @@ A simple REST API that receives post requests and forwards them to various servi
 ## Setup
 
 1. Copy `config.sample.json` to `config.json` and fill in your account details.
+   To add Mastodon accounts, include a `mastodon` section like this:
+
+   ```json
+   "mastodon": {
+       "accounts": {
+           "account1": {
+               "instance_url": "https://mastodon.example",
+               "access_token": "YOUR_TOKEN"
+           }
+       }
+   }
+   ```
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
