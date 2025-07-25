@@ -1,3 +1,4 @@
+import json
 import pytest
 from fastapi.testclient import TestClient
 
@@ -20,25 +21,36 @@ class DummyMastodon:
         self.next_id += 1
         return {'id': mid}
 
-def make_client(monkeypatch, config=None, mastodon_cls=None):
-    if config is None:
-        config = {
-            'mastodon': {
-                'accounts': {
-                    'acc': {
-                        'instance_url': 'https://mastodon.example',
-                        'access_token': 'token'
-                    }
+
+@pytest.fixture
+def temp_config(tmp_path, monkeypatch):
+    """Write a temporary config.json and ensure the server loads it."""
+    cfg = {
+        'mastodon': {
+            'accounts': {
+                'acc': {
+                    'instance_url': 'https://mastodon.example',
+                    'access_token': 'token'
                 }
             }
         }
-    monkeypatch.setattr(server, 'CONFIG', config, raising=False)
+    }
+    cfg_path = tmp_path / 'config.json'
+    cfg_path.write_text(json.dumps(cfg))
+    monkeypatch.setattr(server, 'CONFIG_PATH', cfg_path, raising=False)
+    with cfg_path.open() as fh:
+        server.CONFIG = json.load(fh)
+    return cfg_path
+
+def make_client(monkeypatch, config=None, mastodon_cls=None):
+    if config is not None:
+        monkeypatch.setattr(server, 'CONFIG', config, raising=False)
     if mastodon_cls:
         monkeypatch.setattr(server, 'Mastodon', mastodon_cls)
     server.MASTODON_CLIENTS = server.create_mastodon_clients()
     return TestClient(server.app)
 
-def test_post_text(monkeypatch):
+def test_post_text(monkeypatch, temp_config):
     dummy = DummyMastodon()
     client = make_client(monkeypatch, mastodon_cls=lambda **kw: dummy)
     resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hello'})
@@ -48,7 +60,7 @@ def test_post_text(monkeypatch):
     assert dummy.posts[0]['media_ids'] is None
     assert dummy.media == []
 
-def test_post_with_media(monkeypatch):
+def test_post_with_media(monkeypatch, temp_config):
     dummy = DummyMastodon()
     client = make_client(monkeypatch, mastodon_cls=lambda **kw: dummy)
     resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hi', 'media': ['abc']})
@@ -57,7 +69,7 @@ def test_post_with_media(monkeypatch):
     assert dummy.media == ['abc']
     assert dummy.posts[0]['media_ids'] == [1]
 
-def test_invalid_account(monkeypatch):
+def test_invalid_account(monkeypatch, temp_config):
     dummy = DummyMastodon()
     client = make_client(monkeypatch, config={'mastodon': {'accounts': {}}}, mastodon_cls=lambda **kw: dummy)
     resp = client.post('/mastodon/post', json={'account': 'none', 'text': 'x'})
