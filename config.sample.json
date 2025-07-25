@@ -2,5 +2,13 @@
   "note": {
     "username": "your_username",
     "password": "your_password"
+  },
+  "mastodon": {
+    "accounts": {
+      "account1": {
+        "instance_url": "https://mastodon.example",
+        "access_token": "YOUR_TOKEN"
+      }
+    }
   }
 }
