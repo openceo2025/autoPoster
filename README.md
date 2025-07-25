@@ -17,7 +17,7 @@ A simple REST API that receives post requests and forwards them to various servi
        }
    }
    ```
-2. Install dependencies:
+2. Install dependencies. The project uses `Mastodon.py` and `requests`, so run:
    ```bash
    pip install -r requirements.txt
    ```
