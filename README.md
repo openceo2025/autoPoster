@@ -43,3 +43,29 @@ Send JSON with the following structure:
 `media` is optional and should contain base64 encoded content of images or videos.
 
 This initial version only acknowledges the request.
+
+### `POST /mastodon/post`
+
+Submit a toot to one of the configured Mastodon accounts. The JSON payload must
+include the `account` key matching a name from the `mastodon.accounts` section
+of `config.json`.
+
+```json
+{
+  "account": "account1",
+  "text": "Hello world",
+  "media": ["base64image"]
+}
+```
+
+`media` is optional and should be a list of base64 encoded strings representing
+the files you want uploaded alongside the toot.
+
+Example using `curl`:
+
+```bash
+curl -X POST http://localhost:8765/mastodon/post \
+     -H 'Content-Type: application/json' \
+     -d '{"account": "account1", "text": "Hello world", "media": ["b64"]}'
+```
+
