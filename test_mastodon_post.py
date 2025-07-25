@@ -7,10 +7,18 @@ class DummyMastodon:
     def __init__(self, *args, **kwargs):
         self.init_args = kwargs
         self.posts = []
+        self.media = []
+        self.next_id = 1
 
     def status_post(self, text, media_ids=None):
         self.posts.append({'text': text, 'media_ids': media_ids})
         return {'id': 1}
+
+    def media_post(self, data):
+        self.media.append(data)
+        mid = self.next_id
+        self.next_id += 1
+        return {'id': mid}
 
 def make_client(monkeypatch, config=None, mastodon_cls=None):
     if config is None:
@@ -27,6 +35,7 @@ def make_client(monkeypatch, config=None, mastodon_cls=None):
     monkeypatch.setattr(server, 'CONFIG', config, raising=False)
     if mastodon_cls:
         monkeypatch.setattr(server, 'Mastodon', mastodon_cls)
+    server.MASTODON_CLIENTS = server.create_mastodon_clients()
     return TestClient(server.app)
 
 def test_post_text(monkeypatch):
@@ -37,6 +46,7 @@ def test_post_text(monkeypatch):
     assert resp.json() == {'posted': True}
     assert dummy.posts[0]['text'] == 'hello'
     assert dummy.posts[0]['media_ids'] is None
+    assert dummy.media == []
 
 def test_post_with_media(monkeypatch):
     dummy = DummyMastodon()
@@ -44,6 +54,8 @@ def test_post_with_media(monkeypatch):
     resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hi', 'media': ['abc']})
     assert resp.status_code == 200
     assert dummy.posts[0]['text'] == 'hi'
+    assert dummy.media == ['abc']
+    assert dummy.posts[0]['media_ids'] == [1]
 
 def test_invalid_account(monkeypatch):
     dummy = DummyMastodon()
