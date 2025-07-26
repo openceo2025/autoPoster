@@ -23,8 +23,23 @@ class DummyMastodon:
 
 
 @pytest.fixture
-def temp_config(tmp_path, monkeypatch):
-    """Write a temporary config.json and ensure the server loads it."""
+def config_writer(tmp_path, monkeypatch):
+    """Return a helper to write a config file and load it into the server."""
+
+    def _write(cfg):
+        cfg_path = tmp_path / 'config.json'
+        cfg_path.write_text(json.dumps(cfg))
+        monkeypatch.setattr(server, 'CONFIG_PATH', cfg_path, raising=False)
+        with cfg_path.open() as fh:
+            server.CONFIG = json.load(fh)
+        return cfg_path
+
+    return _write
+
+
+@pytest.fixture
+def temp_config(config_writer):
+    """Write a valid config.json and ensure the server loads it."""
     cfg = {
         'mastodon': {
             'accounts': {
@@ -35,12 +50,7 @@ def temp_config(tmp_path, monkeypatch):
             }
         }
     }
-    cfg_path = tmp_path / 'config.json'
-    cfg_path.write_text(json.dumps(cfg))
-    monkeypatch.setattr(server, 'CONFIG_PATH', cfg_path, raising=False)
-    with cfg_path.open() as fh:
-        server.CONFIG = json.load(fh)
-    return cfg_path
+    return config_writer(cfg)
 
 def make_client(monkeypatch, config=None, mastodon_cls=None):
     if config is not None:
@@ -96,3 +106,40 @@ def test_misconfigured_account(monkeypatch, temp_config):
     assert resp.status_code == 200
     assert resp.json()['error'] == 'Account misconfigured'
     assert not dummy.posts
+
+
+@pytest.fixture
+def empty_accounts_config(config_writer):
+    """Config with an empty mastodon.accounts section."""
+    cfg = {'mastodon': {'accounts': {}}}
+    return config_writer(cfg)
+
+
+@pytest.fixture(params=[
+    {'mastodon': {'accounts': {'acc': {'instance_url': 'https://mastodon.social'}}}},
+    {'mastodon': {'accounts': {'acc': {'access_token': 'token'}}}},
+    {'mastodon': {'accounts': {'acc': {'instance_url': 'https://mastodon.social', 'access_token': 'YOUR_TOKEN'}}}},
+    {'mastodon': {'accounts': {'acc': {'instance_url': 'https://mastodon.example', 'access_token': 'token'}}}},
+])
+def misconfigured_cfg(config_writer, request):
+    """Return various misconfigured account setups."""
+    return config_writer(request.param)
+
+
+def test_accounts_empty(monkeypatch, empty_accounts_config):
+    dummy = DummyMastodon()
+    client = make_client(monkeypatch, mastodon_cls=lambda **kw: dummy)
+    resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'x'})
+    assert resp.status_code == 200
+    assert resp.json()['error'] == 'Account not configured'
+    assert not dummy.posts
+
+
+def test_account_missing_or_placeholder(monkeypatch, misconfigured_cfg):
+    dummy = DummyMastodon()
+    client = make_client(monkeypatch, mastodon_cls=lambda **kw: dummy)
+    resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'x'})
+    assert resp.status_code == 200
+    assert resp.json()['error'] == 'Account misconfigured'
+    assert not dummy.posts
+
