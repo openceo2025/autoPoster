@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import base64
+from io import BytesIO
 
 import pytest
 from fastapi.testclient import TestClient
@@ -86,10 +88,13 @@ def test_post_text(monkeypatch, temp_config):
 def test_post_with_media(monkeypatch, temp_config):
     dummy = DummyMastodon()
     client = make_client(monkeypatch, mastodon_cls=lambda **kw: dummy)
-    resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hi', 'media': ['abc']})
+    data = b'imgdata'
+    encoded = base64.b64encode(data).decode()
+    resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hi', 'media': [encoded]})
     assert resp.status_code == 200
     assert dummy.posts[0]['text'] == 'hi'
-    assert dummy.media == ['abc']
+    assert isinstance(dummy.media[0], BytesIO)
+    assert dummy.media[0].read() == data
     assert dummy.posts[0]['media_ids'] == [1]
 
 def test_invalid_account(monkeypatch, temp_config):
