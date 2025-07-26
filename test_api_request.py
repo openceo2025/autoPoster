@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 import server
 
-pytest_plugins = ["test_mastodon_post"]
+pytest_plugins = ["test_mastodon_post", "test_twitter_post"]
 
 
 def test_post_endpoint(temp_config):
