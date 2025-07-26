@@ -1,5 +1,17 @@
 import json
 import urllib.request
+from pathlib import Path
+
+import pytest
+
+CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
+
+
+def test_config_exists():
+    """Ensure config.json is present before running API tests."""
+    if not CONFIG_PATH.exists():
+        pytest.fail("config.json not found. Please create it before running tests.")
+
 
 
 def main():
