@@ -17,7 +17,8 @@ A simple REST API that receives post requests and forwards them to various servi
        }
    }
    ```
-2. Install dependencies. The project uses `Mastodon.py` and `requests`, so run:
+2. Install dependencies. The project uses `Mastodon.py` and `requests`; the test
+   suite relies on `pytest` and `httpx`. Install everything with:
    ```bash
    pip install -r requirements.txt
    ```
@@ -26,6 +27,10 @@ A simple REST API that receives post requests and forwards them to various servi
    python server.py
    ```
    The API will start on `http://localhost:8765`.
+4. To execute the tests, run:
+   ```bash
+   pytest
+   ```
 
 ## API
 

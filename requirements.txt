@@ -2,3 +2,5 @@ fastapi
 uvicorn
 Mastodon.py
 requests
+pytest
+httpx
