@@ -208,3 +208,5 @@ __marimo__/
 
 # Local configuration (contains API tokens)
 config.json
+example/*
+!example/.gitkeep
