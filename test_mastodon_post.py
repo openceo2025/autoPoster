@@ -29,7 +29,7 @@ def temp_config(tmp_path, monkeypatch):
         'mastodon': {
             'accounts': {
                 'acc': {
-                    'instance_url': 'https://mastodon.example',
+                    'instance_url': 'https://mastodon.social',
                     'access_token': 'token'
                 }
             }
@@ -47,6 +47,7 @@ def make_client(monkeypatch, config=None, mastodon_cls=None):
         monkeypatch.setattr(server, 'CONFIG', config, raising=False)
     if mastodon_cls:
         monkeypatch.setattr(server, 'Mastodon', mastodon_cls)
+    server.MASTODON_ACCOUNT_ERRORS = server.validate_mastodon_accounts(server.CONFIG)
     server.MASTODON_CLIENTS = server.create_mastodon_clients()
     return TestClient(server.app)
 
@@ -75,4 +76,23 @@ def test_invalid_account(monkeypatch, temp_config):
     resp = client.post('/mastodon/post', json={'account': 'none', 'text': 'x'})
     assert resp.status_code == 200
     assert resp.json()['error'] == 'Account not configured'
+    assert not dummy.posts
+
+
+def test_misconfigured_account(monkeypatch, temp_config):
+    cfg = {
+        'mastodon': {
+            'accounts': {
+                'acc': {
+                    'instance_url': 'https://mastodon.example',
+                    'access_token': 'YOUR_TOKEN',
+                }
+            }
+        }
+    }
+    dummy = DummyMastodon()
+    client = make_client(monkeypatch, config=cfg, mastodon_cls=lambda **kw: dummy)
+    resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'x'})
+    assert resp.status_code == 200
+    assert resp.json()['error'] == 'Account misconfigured'
     assert not dummy.posts

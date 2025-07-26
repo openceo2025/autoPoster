@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import base64
 from io import BytesIO
@@ -21,11 +21,47 @@ else:
 app = FastAPI(title="autoPoster")
 
 
+def validate_mastodon_accounts(config: Dict) -> Dict[str, str]:
+    """Validate Mastodon account configuration and return a map of errors."""
+    errors: Dict[str, str] = {}
+    accounts = config.get("mastodon", {}).get("accounts")
+    if not accounts:
+        errors["_general"] = "mastodon.accounts section missing or empty"
+        return errors
+
+    for name, info in accounts.items():
+        account_errors = []
+        instance = info.get("instance_url")
+        token = info.get("access_token")
+
+        if not instance:
+            account_errors.append("missing instance_url")
+        elif "mastodon.example" in instance:
+            account_errors.append("instance_url looks like a placeholder")
+
+        if not token:
+            account_errors.append("missing access_token")
+        elif token == "YOUR_TOKEN":
+            account_errors.append("access_token looks like a placeholder")
+
+        if account_errors:
+            errors[name] = "; ".join(account_errors)
+    return errors
+
+
+MASTODON_ACCOUNT_ERRORS = validate_mastodon_accounts(CONFIG)
+if MASTODON_ACCOUNT_ERRORS:
+    for acc, err in MASTODON_ACCOUNT_ERRORS.items():
+        print(f"Mastodon config error for {acc}: {err}")
+
+
 def create_mastodon_clients():
     """Create Mastodon clients for all configured accounts."""
     clients = {}
     accounts = CONFIG.get("mastodon", {}).get("accounts", {})
     for name, info in accounts.items():
+        if name in MASTODON_ACCOUNT_ERRORS:
+            continue
         try:
             clients[name] = Mastodon(
                 access_token=info["access_token"],
@@ -51,6 +87,8 @@ class MastodonPostRequest(BaseModel):
 
 
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
+    if account in MASTODON_ACCOUNT_ERRORS:
+        return {"error": "Account misconfigured"}
     client = MASTODON_CLIENTS.get(account)
     if not client:
         return {"error": "Account not configured"}
