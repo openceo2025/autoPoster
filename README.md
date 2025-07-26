@@ -74,3 +74,17 @@ curl -X POST http://localhost:8765/mastodon/post \
      -d '{"account": "account1", "text": "Hello world", "media": ["b64"]}'
 ```
 
+## Troubleshooting
+
+If requests to `/mastodon/post` return `{ "error": "Account misconfigured" }`,
+the server detected problems with your Mastodon configuration during startup.
+Common issues include:
+
+* `mastodon.accounts` is missing or empty in `config.json`.
+* An account is missing `instance_url` or `access_token` fields.
+* Placeholder values such as `https://mastodon.example` or `YOUR_TOKEN` are
+  still present.
+
+Check the server logs for messages like `Mastodon config error for account1` and
+update `config.json` with the correct information before restarting the server.
+
