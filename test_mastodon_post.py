@@ -12,14 +12,16 @@ class DummyMastodon:
         self.init_args = kwargs
         self.posts = []
         self.media = []
+        self.media_types = []
         self.next_id = 1
 
     def status_post(self, text, media_ids=None):
         self.posts.append({'text': text, 'media_ids': media_ids})
         return {'id': 1}
 
-    def media_post(self, data):
+    def media_post(self, data, mime_type=None):
         self.media.append(data)
+        self.media_types.append(mime_type)
         mid = self.next_id
         self.next_id += 1
         return {'id': mid}
@@ -84,6 +86,7 @@ def test_post_with_media(monkeypatch, temp_config):
     assert dummy.posts[0]['text'] == 'hi'
     assert isinstance(dummy.media[0], BytesIO)
     assert dummy.media[0].read() == data
+    assert dummy.media_types[0] == "application/octet-stream"
     assert dummy.posts[0]['media_ids'] == [1]
 
 def test_invalid_account(monkeypatch, temp_config):

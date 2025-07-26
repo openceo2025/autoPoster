@@ -99,7 +99,7 @@ def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None)
         for item in media:
             try:
                 data = base64.b64decode(item)
-                uploaded = client.media_post(BytesIO(data))
+                uploaded = client.media_post(BytesIO(data), mime_type="application/octet-stream")
                 media_ids.append(uploaded.get("id"))
             except Exception as exc:
                 return {"error": f"Media upload failed: {exc}"}
