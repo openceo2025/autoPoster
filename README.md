@@ -33,8 +33,8 @@ A simple REST API that receives post requests and forwards them to various servi
        }
    }
    ```
-2. Install dependencies. The project uses `Mastodon.py` and `requests`; the test
-   suite relies on `pytest` and `httpx`. Install everything with:
+2. Install dependencies. The project uses `Mastodon.py`, `requests`, and `tweepy`;
+   the test suite relies on `pytest` and `httpx`. Install everything with:
    ```bash
    pip install -r requirements.txt
    ```
