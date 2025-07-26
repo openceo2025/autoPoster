@@ -15,6 +15,22 @@ A simple REST API that receives post requests and forwards them to various servi
                "access_token": "YOUR_TOKEN"
            }
        }
+    }
+    ```
+   To configure Twitter accounts, add a `twitter` section with credentials for
+   each account:
+
+   ```json
+   "twitter": {
+       "accounts": {
+           "account1": {
+               "consumer_key": "YOUR_CONSUMER_KEY",
+               "consumer_secret": "YOUR_CONSUMER_SECRET",
+               "access_token": "YOUR_ACCESS_TOKEN",
+               "access_token_secret": "YOUR_ACCESS_TOKEN_SECRET",
+               "bearer_token": "YOUR_BEARER_TOKEN"
+           }
+       }
    }
    ```
 2. Install dependencies. The project uses `Mastodon.py` and `requests`; the test
