@@ -1,20 +1,9 @@
 import json
-from pathlib import Path
 import base64
 from io import BytesIO
 
 import pytest
 from fastapi.testclient import TestClient
-
-CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
-
-if not CONFIG_PATH.exists():
-    pytest.fail("config.json not found. Please create it with Mastodon account information before running tests.")
-else:
-    with CONFIG_PATH.open() as fh:
-        _cfg = json.load(fh)
-    if not _cfg.get("mastodon", {}).get("accounts"):
-        pytest.fail("No Mastodon accounts configured in config.json.")
 
 import server
 
