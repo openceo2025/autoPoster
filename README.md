@@ -95,17 +95,49 @@ curl -X POST http://localhost:8765/mastodon/post \
      -d '{"account": "account1", "text": "Hello world", "media": ["b64"]}'
 ```
 
+### `POST /twitter/post`
+
+Send a tweet from one of the configured Twitter accounts. The JSON payload must
+include the `account` key matching a name from the `twitter.accounts` section of
+`config.json`.
+
+```json
+{
+  "account": "account1",
+  "text": "Hello Twitter",
+  "media": ["base64image"]
+}
+```
+
+`media` is optional and should be a list of base64 encoded strings representing
+files that will be uploaded and attached to the tweet. Each account entry in
+`config.json` needs valid `consumer_key`, `consumer_secret`, `access_token`,
+`access_token_secret` and `bearer_token` values for authentication.
+
+Example using `curl`:
+
+```bash
+curl -X POST http://localhost:8765/twitter/post \
+     -H 'Content-Type: application/json' \
+     -d '{"account": "account1", "text": "Hello Twitter", "media": ["b64"]}'
+```
+
 ## Troubleshooting
 
-If requests to `/mastodon/post` return `{ "error": "Account misconfigured" }`,
-the server detected problems with your Mastodon configuration during startup.
-Common issues include:
+If requests to `/mastodon/post` or `/twitter/post` return
+`{ "error": "Account misconfigured" }`, the server detected problems with your
+account configuration during startup.
 
-* `mastodon.accounts` is missing or empty in `config.json`.
-* An account is missing `instance_url` or `access_token` fields.
-* Placeholder values such as `https://mastodon.example` or `YOUR_TOKEN` are
-  still present.
+For Mastodon accounts, verify that:
 
-Check the server logs for messages like `Mastodon config error for account1` and
-update `config.json` with the correct information before restarting the server.
+* `mastodon.accounts` is present and not empty in `config.json`.
+* Each account defines `instance_url` and `access_token` values.
+
+For Twitter accounts, ensure every entry under `twitter.accounts` includes
+`consumer_key`, `consumer_secret`, `access_token`, `access_token_secret` and
+`bearer_token` without placeholder values.
+
+Check the server logs for messages like `Mastodon config error for account1` or
+`Twitter config error for account1` and update `config.json` with the correct
+information before restarting the server.
 
