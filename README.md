@@ -64,7 +64,11 @@ of `config.json`.
 ```
 
 `media` is optional and should be a list of base64 encoded strings representing
-the files you want uploaded alongside the toot.
+the files you want uploaded alongside the toot. The server decodes each
+element, then uploads the bytes to Mastodon using `media_post`. No explicit
+size or type validation is performed, so keep each file within the limits
+accepted by your Mastodon instance (often up to around 40 MB for images or
+video) and in a supported format such as PNG, JPEG, GIF or MP4.
 
 Example using `curl`:
 
