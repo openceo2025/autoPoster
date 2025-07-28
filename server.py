@@ -349,7 +349,9 @@ def post_to_note(
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
-            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
+            login_button = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"])
+            wait.until(lambda d: login_button.is_enabled())
+            login_button.click()
             wait.until(EC.url_contains("/"))
         except Exception as exc:
             path = _capture_screenshot()

@@ -8,6 +8,8 @@ class DummyElement:
         pass
     def click(self):
         pass
+    def is_enabled(self):
+        return True
 
 class DummyDriver:
     def __init__(self, fail=None, *args, **kwargs):
