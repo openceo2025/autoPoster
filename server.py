@@ -325,20 +325,9 @@ def post_to_note(
         return {"error": "Account not configured"}
 
     options = ChromeOptions()
-    # Use the newer headless mode and tweak some settings so that the browser
-    # looks less like an automation session.  Some sites (including note.com)
-    # reject logins from a typical Selenium fingerprint.
-    options.add_argument("--headless=new")
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/123.0.6312.86 Safari/537.36"
-    )
     print("[NOTE] Launching Chrome")
     driver = webdriver.Chrome(options=options)
 
@@ -359,11 +348,7 @@ def post_to_note(
             driver.get("https://note.com/login")
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
-            pw_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"])
-            pw_field.send_keys(creds["password"])
-            # Hitting ENTER on the password field ensures that any JavaScript
-            # validation that enables the submit button is triggered.
-            pw_field.send_keys(Keys.ENTER)
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
             wait.until(EC.url_contains("/"))
         except Exception as exc:
