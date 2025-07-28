@@ -314,6 +314,9 @@ def post_to_note(
 ):
     """Automate posting to note.com using Selenium."""
 
+    # Debug: announce which account we're using
+    print(f"[NOTE] Starting post for account: {account}")
+
     if account in NOTE_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
 
@@ -325,36 +328,47 @@ def post_to_note(
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    print("[NOTE] Launching Chrome")
     driver = webdriver.Chrome(options=options)
 
     try:
+        print("[NOTE] Browser launched, waiting for elements")
         wait = WebDriverWait(driver, 20)
 
+        print("[NOTE] Navigating to login page")
         driver.get("https://note.com/login")
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
+        print("[NOTE] Entering credentials")
         driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
         driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
         driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
 
+        print("[NOTE] Waiting for login to complete")
         wait.until(EC.url_contains("/"))
+        print("[NOTE] Opening new post page")
         driver.get(NOTE_SELECTORS["new_post_url"])
 
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])))
+        print("[NOTE] Adding post text")
         driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]).send_keys(text)
 
         for item in media:
             path = _temp_file_from_b64(item)
+            print(f"[NOTE] Uploading media {path}")
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path)
             os.unlink(path)
 
         if thumbnail:
             path = _temp_file_from_b64(thumbnail)
+            print(f"[NOTE] Setting thumbnail {path}")
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path)
             os.unlink(path)
 
         if paid:
+            print("[NOTE] Marking post as paid")
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["paid_tab"]).click()
         else:
+            print("[NOTE] Marking post as free")
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["free_tab"]).click()
 
         for tag in tags:
@@ -362,12 +376,16 @@ def post_to_note(
             tag_field.send_keys(tag)
             tag_field.send_keys(Keys.ENTER)
 
+        print("[NOTE] Publishing post")
         driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["publish"]).click()
         wait.until(EC.url_contains("/notes/"))
+        print("[NOTE] Post published")
         return {"posted": True}
     except Exception as exc:
+        print(f"[NOTE] Error during posting: {exc}")
         return {"error": str(exc)}
     finally:
+        print("[NOTE] Closing browser")
         driver.quit()
 
 @app.get("/")
