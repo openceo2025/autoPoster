@@ -2,10 +2,19 @@ import json
 from pathlib import Path
 from typing import List, Optional, Dict
 
+import os
+import tempfile
+
 import base64
 from io import BytesIO
 from mastodon import Mastodon
 import tweepy
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -122,6 +131,21 @@ def load_note_accounts():
 
 
 NOTE_ACCOUNTS = load_note_accounts()
+
+# CSS selectors and URLs used to automate posting to Note
+NOTE_SELECTORS = {
+    "login_username": "#login_id",
+    "login_password": "#login_password",
+    "login_submit": "button[type='submit']",
+    "new_post_url": "https://note.com/notes/new",
+    "text_area": "textarea",
+    "media_input": "input[type='file']",
+    "thumbnail_input": "input[name='thumbnail']",
+    "paid_tab": "#paid-tab",
+    "free_tab": "#free-tab",
+    "tag_input": "input[name='tag']",
+    "publish": "button.publish",
+}
 
 
 def validate_twitter_accounts(config: Dict) -> Dict[str, str]:
@@ -260,6 +284,82 @@ def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
         return {"error": str(exc)}
 
     return {"posted": True}
+
+
+def _temp_file_from_b64(data: str, suffix: str = "") -> str:
+    """Write base64 data to a temporary file and return its path."""
+    raw = base64.b64decode(data)
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    tmp.write(raw)
+    tmp.close()
+    return tmp.name
+
+
+def post_to_note(
+    account: str,
+    text: str,
+    media: List[str],
+    thumbnail: str,
+    paid: bool,
+    tags: List[str],
+):
+    """Automate posting to note.com using Selenium."""
+
+    if account in NOTE_ACCOUNT_ERRORS:
+        return {"error": "Account misconfigured"}
+
+    creds = NOTE_ACCOUNTS.get(account)
+    if not creds:
+        return {"error": "Account not configured"}
+
+    options = ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(options=options)
+
+    try:
+        wait = WebDriverWait(driver, 20)
+
+        driver.get("https://note.com/login")
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
+        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
+        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
+        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
+
+        wait.until(EC.url_contains("/"))
+        driver.get(NOTE_SELECTORS["new_post_url"])
+
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])))
+        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]).send_keys(text)
+
+        for item in media:
+            path = _temp_file_from_b64(item)
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path)
+            os.unlink(path)
+
+        if thumbnail:
+            path = _temp_file_from_b64(thumbnail)
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path)
+            os.unlink(path)
+
+        if paid:
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["paid_tab"]).click()
+        else:
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["free_tab"]).click()
+
+        for tag in tags:
+            tag_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["tag_input"])
+            tag_field.send_keys(tag)
+            tag_field.send_keys(Keys.ENTER)
+
+        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["publish"]).click()
+        wait.until(EC.url_contains("/notes/"))
+        return {"posted": True}
+    except Exception as exc:
+        return {"error": str(exc)}
+    finally:
+        driver.quit()
 
 @app.get("/")
 async def root():
