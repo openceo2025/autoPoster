@@ -38,12 +38,14 @@ A simple REST API that receives post requests and forwards them to various servi
    ```bash
    pip install -r requirements.txt
    ```
-3. Run the server:
+3. Install a compatible WebDriver such as **ChromeDriver** or **geckodriver**
+   and ensure it is available on your `PATH` so Selenium can launch the browser.
+4. Run the server:
    ```bash
    python server.py
    ```
    The API will start on `http://localhost:8765`.
-4. To execute the tests, run:
+5. To execute the tests, run:
    ```bash
    pytest
    ```
