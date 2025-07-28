@@ -3,12 +3,12 @@ import json
 import requests
 
 URL = "http://localhost:8765/note/post"
-ACCOUNT = "account1"  # must match an entry in config.json
-TEXT = "これはnoteへの自動投稿テストです"
-THUMBNAIL_PATH = "/path/to/thumbnail.png"  # replace with an actual file path
-MEDIA_PATHS = ["/path/to/image1.png", "/path/to/image2.png"]  # optional additional images
+ACCOUNT = "nicchi"  # must match an entry in config.json
+TEXT = "これはテスト投稿です"
+THUMBNAIL_PATH = r"C:\Users\satof\sato\autoPoster\autoPoster\example\titeletest.png"  # replace with an actual file path
+MEDIA_PATHS = [r"C:\Users\satof\sato\autoPoster\autoPoster\example\b6701f05-1e2e-4776-a7c3-69c13c469514.png", r"C:\Users\satof\sato\autoPoster\autoPoster\example\b6701f05-1e2e-4776-a7c3-69c13c46sssss9514.jpg"]  # optional additional images
 PAID = False
-TAGS = ["test", "auto"]
+TAGS = ["test", "ai生成"]
 
 
 def _encode_file(path: str) -> str:
