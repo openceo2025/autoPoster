@@ -77,6 +77,53 @@ def create_mastodon_clients():
 MASTODON_CLIENTS = create_mastodon_clients()
 
 
+def validate_note_accounts(config: Dict) -> Dict[str, str]:
+    """Validate Note account configuration and return a map of errors."""
+    errors: Dict[str, str] = {}
+    accounts = config.get("note", {}).get("accounts")
+    if not accounts:
+        errors["_general"] = "note.accounts section missing or empty"
+        return errors
+
+    placeholders = {
+        "username": "your_username",
+        "password": "your_password",
+    }
+
+    for name, info in accounts.items():
+        account_errors = []
+        for key, placeholder in placeholders.items():
+            val = info.get(key)
+            if not val:
+                account_errors.append(f"missing {key}")
+            elif val == placeholder:
+                account_errors.append(f"{key} looks like a placeholder")
+
+        if account_errors:
+            errors[name] = "; ".join(account_errors)
+    return errors
+
+
+NOTE_ACCOUNT_ERRORS = validate_note_accounts(CONFIG)
+if NOTE_ACCOUNT_ERRORS:
+    for acc, err in NOTE_ACCOUNT_ERRORS.items():
+        print(f"Note config error for {acc}: {err}")
+
+
+def load_note_accounts():
+    """Return credentials for configured Note accounts."""
+    accounts = {}
+    cfg_accounts = CONFIG.get("note", {}).get("accounts", {})
+    for name, info in cfg_accounts.items():
+        if name in NOTE_ACCOUNT_ERRORS:
+            continue
+        accounts[name] = info
+    return accounts
+
+
+NOTE_ACCOUNTS = load_note_accounts()
+
+
 def validate_twitter_accounts(config: Dict) -> Dict[str, str]:
     """Validate Twitter account configuration and return a map of errors."""
     errors: Dict[str, str] = {}
