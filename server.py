@@ -134,9 +134,9 @@ NOTE_ACCOUNTS = load_note_accounts()
 
 # CSS selectors and URLs used to automate posting to Note
 NOTE_SELECTORS = {
-    "login_username": "#login_id",
-    "login_password": "#login_password",
-    "login_submit": "button[type='submit']",
+    "login_username": "#email",
+    "login_password": "#password",
+    "login_submit": ".o-login__button button",
     "new_post_url": "https://note.com/notes/new",
     "text_area": "textarea",
     "media_input": "input[type='file']",
