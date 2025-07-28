@@ -1,0 +1,107 @@
+import json
+import server
+from fastapi.testclient import TestClient
+import pytest
+
+class DummyElement:
+    def send_keys(self, *args, **kwargs):
+        pass
+    def click(self):
+        pass
+
+class DummyDriver:
+    def __init__(self, *args, **kwargs):
+        self.actions = []
+    def get(self, url):
+        self.actions.append(('get', url))
+    def find_element(self, *args, **kwargs):
+        self.actions.append(('find', args, kwargs))
+        return DummyElement()
+    def quit(self):
+        self.actions.append(('quit',))
+
+class DummyWait:
+    def __init__(self, driver, timeout):
+        pass
+    def until(self, condition):
+        return True
+
+@pytest.fixture
+def note_config_writer(tmp_path, monkeypatch):
+    def _write(cfg):
+        cfg_path = tmp_path / 'config.json'
+        cfg_path.write_text(json.dumps(cfg))
+        monkeypatch.setattr(server, 'CONFIG_PATH', cfg_path, raising=False)
+        with cfg_path.open() as fh:
+            server.CONFIG = json.load(fh)
+        return cfg_path
+    return _write
+
+@pytest.fixture
+def note_temp_config(note_config_writer):
+    cfg = {
+        'note': {
+            'accounts': {
+                'acc': {
+                    'username': 'user',
+                    'password': 'pass',
+                }
+            }
+        }
+    }
+    return note_config_writer(cfg)
+
+
+def make_client(monkeypatch, config=None):
+    if config is not None:
+        monkeypatch.setattr(server, 'CONFIG', config, raising=False)
+    server.NOTE_ACCOUNT_ERRORS = server.validate_note_accounts(server.CONFIG)
+    server.NOTE_ACCOUNTS = server.load_note_accounts()
+    return TestClient(server.app)
+
+
+def patch_driver(monkeypatch):
+    monkeypatch.setattr(server.webdriver, 'Chrome', lambda *a, **kw: DummyDriver())
+    monkeypatch.setattr(server, 'WebDriverWait', lambda driver, timeout: DummyWait(driver, timeout))
+    import tempfile
+    def fake_temp(data, suffix=''):
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        tmp.close()
+        return tmp.name
+    monkeypatch.setattr(server, '_temp_file_from_b64', fake_temp)
+
+
+def test_note_post_success(monkeypatch, note_temp_config):
+    patch_driver(monkeypatch)
+    client = make_client(monkeypatch)
+    payload = {
+        'account': 'acc',
+        'text': 'hello',
+        'media': ['m1'],
+        'thumbnail': 'th',
+        'paid': False,
+        'tags': ['t']
+    }
+    resp = client.post('/note/post', json=payload)
+    assert resp.status_code == 200
+    assert resp.json() == {'posted': True}
+
+
+def test_note_post_misconfigured(monkeypatch, note_config_writer):
+    cfg = {
+        'note': {
+            'accounts': {
+                'acc': {
+                    'username': 'your_username',
+                    'password': 'your_password',
+                }
+            }
+        }
+    }
+    note_config_writer(cfg)
+    patch_driver(monkeypatch)
+    client = make_client(monkeypatch)
+    payload = {'account': 'acc', 'text': 'x', 'paid': False}
+    resp = client.post('/note/post', json=payload)
+    assert resp.status_code == 200
+    assert resp.json()['error'] == 'Account misconfigured'
