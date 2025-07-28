@@ -10,13 +10,20 @@ class DummyElement:
         pass
 
 class DummyDriver:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fail=None, *args, **kwargs):
+        self.fail = fail
         self.actions = []
     def get(self, url):
         self.actions.append(('get', url))
-    def find_element(self, *args, **kwargs):
-        self.actions.append(('find', args, kwargs))
+    def find_element(self, by, selector, *args, **kwargs):
+        self.actions.append(('find', selector))
+        if selector == self.fail:
+            raise Exception('missing')
         return DummyElement()
+    def save_screenshot(self, path):
+        self.actions.append(('screenshot', path))
+        with open(path, 'wb') as fh:
+            fh.write(b'')
     def quit(self):
         self.actions.append(('quit',))
 
@@ -60,8 +67,8 @@ def make_client(monkeypatch, config=None):
     return TestClient(server.app)
 
 
-def patch_driver(monkeypatch):
-    monkeypatch.setattr(server.webdriver, 'Chrome', lambda *a, **kw: DummyDriver())
+def patch_driver(monkeypatch, fail_selector=None):
+    monkeypatch.setattr(server.webdriver, 'Chrome', lambda *a, **kw: DummyDriver(fail_selector))
     monkeypatch.setattr(server, 'WebDriverWait', lambda driver, timeout: DummyWait(driver, timeout))
     import tempfile
     def fake_temp(data, suffix=''):
@@ -105,3 +112,27 @@ def test_note_post_misconfigured(monkeypatch, note_config_writer):
     resp = client.post('/note/post', json=payload)
     assert resp.status_code == 200
     assert resp.json()['error'] == 'Account misconfigured'
+
+
+def test_note_post_login_error(monkeypatch, note_temp_config):
+    fail = server.NOTE_SELECTORS['login_username']
+    patch_driver(monkeypatch, fail_selector=fail)
+    client = make_client(monkeypatch)
+    payload = {'account': 'acc', 'text': 'x', 'paid': False}
+    resp = client.post('/note/post', json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data['error'].startswith('login failed')
+    assert 'screenshot' in data
+
+
+def test_note_post_publish_error(monkeypatch, note_temp_config):
+    fail = server.NOTE_SELECTORS['publish']
+    patch_driver(monkeypatch, fail_selector=fail)
+    client = make_client(monkeypatch)
+    payload = {'account': 'acc', 'text': 'x', 'paid': False}
+    resp = client.post('/note/post', json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data['error'].startswith('publish failed')
+    assert 'screenshot' in data

@@ -331,59 +331,78 @@ def post_to_note(
     print("[NOTE] Launching Chrome")
     driver = webdriver.Chrome(options=options)
 
+    def _capture_screenshot():
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        tmp.close()
+        try:
+            driver.save_screenshot(tmp.name)
+        except Exception as exc:
+            print(f"[NOTE] Failed to save screenshot: {exc}")
+        return tmp.name
+
     try:
-        print("[NOTE] Browser launched, waiting for elements")
         wait = WebDriverWait(driver, 20)
 
-        print("[NOTE] Navigating to login page")
-        driver.get("https://note.com/login")
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
-        print("[NOTE] Entering credentials")
-        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
-        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
-        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
+        # --- Login step ---
+        try:
+            driver.get("https://note.com/login")
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
+            wait.until(EC.url_contains("/"))
+        except Exception as exc:
+            path = _capture_screenshot()
+            msg = f"login failed: {exc}"
+            print(f"[NOTE] {msg}; screenshot {path}")
+            return {"error": msg, "screenshot": path}
 
-        print("[NOTE] Waiting for login to complete")
-        wait.until(EC.url_contains("/"))
-        print("[NOTE] Opening new post page")
-        driver.get(NOTE_SELECTORS["new_post_url"])
+        # --- Open new post page ---
+        try:
+            driver.get(NOTE_SELECTORS["new_post_url"])
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])))
+        except Exception as exc:
+            path = _capture_screenshot()
+            msg = f"open new post failed: {exc}"
+            print(f"[NOTE] {msg}; screenshot {path}")
+            return {"error": msg, "screenshot": path}
 
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])))
-        print("[NOTE] Adding post text")
-        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]).send_keys(text)
+        # --- Compose content / upload media ---
+        try:
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]).send_keys(text)
+            for item in media:
+                path_f = _temp_file_from_b64(item)
+                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path_f)
+                os.unlink(path_f)
+            if thumbnail:
+                path_f = _temp_file_from_b64(thumbnail)
+                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path_f)
+                os.unlink(path_f)
+            if paid:
+                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["paid_tab"]).click()
+            else:
+                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["free_tab"]).click()
+            for tag in tags:
+                tag_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["tag_input"])
+                tag_field.send_keys(tag)
+                tag_field.send_keys(Keys.ENTER)
+        except Exception as exc:
+            path = _capture_screenshot()
+            msg = f"compose failed: {exc}"
+            print(f"[NOTE] {msg}; screenshot {path}")
+            return {"error": msg, "screenshot": path}
 
-        for item in media:
-            path = _temp_file_from_b64(item)
-            print(f"[NOTE] Uploading media {path}")
-            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path)
-            os.unlink(path)
-
-        if thumbnail:
-            path = _temp_file_from_b64(thumbnail)
-            print(f"[NOTE] Setting thumbnail {path}")
-            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path)
-            os.unlink(path)
-
-        if paid:
-            print("[NOTE] Marking post as paid")
-            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["paid_tab"]).click()
-        else:
-            print("[NOTE] Marking post as free")
-            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["free_tab"]).click()
-
-        for tag in tags:
-            tag_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["tag_input"])
-            tag_field.send_keys(tag)
-            tag_field.send_keys(Keys.ENTER)
-
-        print("[NOTE] Publishing post")
-        driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["publish"]).click()
-        wait.until(EC.url_contains("/notes/"))
-        print("[NOTE] Post published")
-        return {"posted": True}
-    except Exception as exc:
-        print(f"[NOTE] Error during posting: {exc}")
-        return {"error": str(exc)}
+        # --- Publish step ---
+        try:
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["publish"]).click()
+            wait.until(EC.url_contains("/notes/"))
+            print("[NOTE] Post published")
+            return {"posted": True}
+        except Exception as exc:
+            path = _capture_screenshot()
+            msg = f"publish failed: {exc}"
+            print(f"[NOTE] {msg}; screenshot {path}")
+            return {"error": msg, "screenshot": path}
     finally:
         print("[NOTE] Closing browser")
         driver.quit()
