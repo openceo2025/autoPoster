@@ -180,7 +180,6 @@ def post_to_note(
             )
             login_button = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"])
             login_button.click()
-            login_button.click()
             wait.until(lambda d: not d.current_url.startswith(login_base))
             print("[NOTE] Logged in")
         except Exception as exc:
