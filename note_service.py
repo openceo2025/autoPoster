@@ -140,8 +140,7 @@ def post_to_note(
         return {"error": msg, "screenshot": path}
 
     def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
-        if trigger is not None:
-            trigger.click()
+        # no clicking here
         print("[DEBUG] waiting for input element")
         try:
             WebDriverWait(driver, 20).until(
@@ -233,7 +232,8 @@ def post_to_note(
                 if not buttons:
                     raise Exception("media button not found")
                 button = buttons[0]
-                _send_to_new_input(NOTE_SELECTORS["media_input"], path_f, button)
+                button.click()
+                _send_to_new_input(NOTE_SELECTORS["media_input"], path_f)
                 print("[NOTE] Media item uploaded")
             except Exception as exc:
                 return _fail_step("upload media", exc)
@@ -248,7 +248,8 @@ def post_to_note(
                 if not buttons:
                     raise Exception("thumbnail button not found")
                 button = buttons[0]
-                _send_to_new_input(NOTE_SELECTORS["thumbnail_input"], path_f, button)
+                button.click()
+                _send_to_new_input(NOTE_SELECTORS["thumbnail_input"], path_f)
                 print("[NOTE] Thumbnail uploaded")
             except Exception as exc:
                 return _fail_step("upload thumbnail", exc)
