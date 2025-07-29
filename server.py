@@ -427,6 +427,7 @@ def post_to_note(
             # Sometimes the first click is missed; send a second one
             login_button.click()
             wait.until(lambda d: not d.current_url.startswith(login_base))
+            print("[NOTE] Logged in")
         except Exception as exc:
             return _fail_step("login", exc)
 
@@ -445,6 +446,7 @@ def post_to_note(
             wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["editor_title"]))
             )
+            print("[NOTE] Editor opened")
         except Exception as exc:
             return _fail_step("open new post", exc)
 
@@ -452,19 +454,23 @@ def post_to_note(
         try:
             title_text = text.splitlines()[0][:20] if text else ""
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["title_area"]).send_keys(title_text)
+            print("[NOTE] Title entered")
         except Exception as exc:
             return _fail_step("enter title", exc)
 
         try:
             body = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])
             body.send_keys(text)
+            print("[NOTE] Body entered")
         except Exception as exc:
             return _fail_step("enter body", exc)
 
         for item in media:
             try:
+                print("[NOTE] Uploading media item")
                 path_f = _temp_file_from_b64(item)
                 driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path_f)
+                print("[NOTE] Media item uploaded")
             except Exception as exc:
                 return _fail_step("upload media", exc)
             finally:
@@ -472,12 +478,14 @@ def post_to_note(
 
         if thumbnail:
             try:
+                print("[NOTE] Uploading thumbnail")
                 path_f = _temp_file_from_b64(thumbnail)
                 driver.find_element(By.XPATH, NOTE_SELECTORS["thumbnail_button"]).click()
                 wait.until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]))
                 )
                 driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path_f)
+                print("[NOTE] Thumbnail uploaded")
             except Exception as exc:
                 return _fail_step("upload thumbnail", exc)
             finally:
@@ -488,6 +496,7 @@ def post_to_note(
                 driver.find_element(By.XPATH, NOTE_SELECTORS["paid_tab"]).click()
             else:
                 driver.find_element(By.XPATH, NOTE_SELECTORS["free_tab"]).click()
+            print("[NOTE] Paid/free option set")
         except Exception as exc:
             return _fail_step("set paid/free", exc)
 
@@ -496,16 +505,19 @@ def post_to_note(
                 tag_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["tag_input"])
                 tag_field.send_keys(tag)
                 tag_field.send_keys(Keys.ENTER)
+                print(f"[NOTE] Tag added: {tag}")
             except Exception as exc:
                 return _fail_step("add tag", exc)
 
         # --- Publish step ---
         try:
             driver.find_element(By.XPATH, NOTE_SELECTORS["publish_next"]).click()
+            print("[NOTE] Proceeding to publish")
             wait.until(
                 EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["publish"]))
             )
             driver.find_element(By.XPATH, NOTE_SELECTORS["publish"]).click()
+            print("[NOTE] Publish button clicked")
             wait.until(EC.url_contains("/notes/"))
             print("[NOTE] Post published")
             return {"posted": True}
