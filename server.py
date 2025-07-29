@@ -170,6 +170,9 @@ NOTE_SELECTORS = {
 
     # File inputs appear after clicking their respective UI controls.
     "media_input": "input[type='file']",
+    # Body image uploads require clicking the "画像を追加" button to create a new
+    # file input.
+    "media_button": "//button[contains(@aria-label, '画像を追加')]",
     "thumbnail_button": "//button[contains(@aria-label, '画像をアップロード')]",
     "thumbnail_input": "input[type='file']",
 
@@ -477,7 +480,8 @@ def post_to_note(
             try:
                 print("[NOTE] Uploading media item")
                 path_f = _temp_file_from_b64(item)
-                _send_to_new_input(NOTE_SELECTORS["media_input"], path_f)
+                button = driver.find_element(By.XPATH, NOTE_SELECTORS["media_button"])
+                _send_to_new_input(NOTE_SELECTORS["media_input"], path_f, button)
                 print("[NOTE] Media item uploaded")
             except Exception as exc:
                 return _fail_step("upload media", exc)
