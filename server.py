@@ -374,6 +374,7 @@ def post_to_note(
             login_url = NOTE_SELECTORS["login_url"] + urllib.parse.quote(
                 NOTE_SELECTORS["home_url"]
             )
+            login_base = NOTE_SELECTORS["login_url"].split("?")[0]
             driver.get(login_url)
             # Wait for the login form fields to appear
             wait.until(
@@ -404,7 +405,7 @@ def post_to_note(
             login_button.click()
             # Sometimes the first click is missed; send a second one
             login_button.click()
-            wait.until(EC.url_contains("/"))
+            wait.until(lambda d: not d.current_url.startswith(login_base))
         except Exception as exc:
             path = _capture_screenshot()
             msg = f"login failed: {exc}"
