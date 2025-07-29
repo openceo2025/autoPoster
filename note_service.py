@@ -31,6 +31,7 @@ NOTE_SELECTORS = {
     "editor_title": "textarea[placeholder='記事タイトル'], div[data-placeholder='記事タイトル']",
     "title_area": "textarea[placeholder='記事タイトル'], div[data-placeholder='記事タイトル']",
     "text_area": "div[contenteditable='true'][role='textbox']",
+    "open_menu": "//button[contains(@aria-label,'メニューを開く')]",
     "media_input": "input[type='file']",
     "media_button": "//button[contains(@aria-label, '画像') or contains(., '画像')]",
     "thumbnail_button": (
@@ -217,6 +218,13 @@ def post_to_note(
             try:
                 print("[NOTE] Uploading media item")
                 path_f = _temp_file_from_b64(item)
+                menu_buttons = driver.find_elements(By.XPATH, NOTE_SELECTORS["open_menu"])
+                if not menu_buttons:
+                    raise Exception("menu button not found")
+                menu_buttons[0].click()
+                wait.until(
+                    EC.presence_of_element_located((By.XPATH, NOTE_SELECTORS["media_button"]))
+                )
                 buttons = driver.find_elements(By.XPATH, NOTE_SELECTORS["media_button"])
                 if not buttons:
                     raise Exception("media button not found")
