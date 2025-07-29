@@ -70,7 +70,9 @@ The server uses Selenium with headless Chrome to publish notes. Install Google
 Chrome and a matching **ChromeDriver** (or another WebDriver such as
 geckodriver) and ensure the driver binary is available on your `PATH`. You do
 not need to run the driver yourself&mdash;`server.py` launches it automatically
-when a request to `/note/post` is processed.
+when a request to `/note/post` is processed. After logging in the automation
+opens the top page, clicks **投稿** and then **新しく記事を書く** to reach the
+editor.
 
 ## API
 
