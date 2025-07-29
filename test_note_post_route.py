@@ -24,6 +24,11 @@ class DummyDriver:
         if selector == self.fail:
             raise Exception('missing')
         return DummyElement()
+    def find_elements(self, by, selector, *args, **kwargs):
+        self.actions.append(('find_all', selector))
+        if selector == self.fail:
+            return []
+        return [DummyElement()]
     def save_screenshot(self, path):
         self.actions.append(('screenshot', path))
         with open(path, 'wb') as fh:
@@ -33,8 +38,13 @@ class DummyDriver:
 
 class DummyWait:
     def __init__(self, driver, timeout):
-        pass
+        self.driver = driver
     def until(self, condition):
+        if callable(condition):
+            try:
+                condition(self.driver)
+            except Exception:
+                pass
         return True
 
 @pytest.fixture

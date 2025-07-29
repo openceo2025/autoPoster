@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 
 import os
 import tempfile
@@ -386,6 +386,14 @@ def post_to_note(
         print(f"[NOTE] {msg}; screenshot {path}")
         return {"error": msg, "screenshot": path}
 
+    def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
+        """Wait for a new file input to appear and send the file path."""
+        existing = driver.find_elements(By.CSS_SELECTOR, input_selector)
+        if trigger is not None:
+            trigger.click()
+        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > len(existing))
+        driver.find_elements(By.CSS_SELECTOR, input_selector)[-1].send_keys(path)
+
     try:
         wait = WebDriverWait(driver, 20)
 
@@ -469,7 +477,7 @@ def post_to_note(
             try:
                 print("[NOTE] Uploading media item")
                 path_f = _temp_file_from_b64(item)
-                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path_f)
+                _send_to_new_input(NOTE_SELECTORS["media_input"], path_f)
                 print("[NOTE] Media item uploaded")
             except Exception as exc:
                 return _fail_step("upload media", exc)
@@ -480,11 +488,8 @@ def post_to_note(
             try:
                 print("[NOTE] Uploading thumbnail")
                 path_f = _temp_file_from_b64(thumbnail)
-                driver.find_element(By.XPATH, NOTE_SELECTORS["thumbnail_button"]).click()
-                wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]))
-                )
-                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path_f)
+                button = driver.find_element(By.XPATH, NOTE_SELECTORS["thumbnail_button"])
+                _send_to_new_input(NOTE_SELECTORS["thumbnail_input"], path_f, button)
                 print("[NOTE] Thumbnail uploaded")
             except Exception as exc:
                 return _fail_step("upload thumbnail", exc)
