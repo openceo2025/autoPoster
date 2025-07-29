@@ -137,33 +137,14 @@ NOTE_SELECTORS = {
     "login_username": "#email",
     "login_password": "#password",
     "login_submit": ".o-login__button button",
-
-    # navigation
-    "home_url": "https://note.com/",
-    "post_menu": "//a[contains(., '投稿')]",
-    "new_post": "//a[contains(., '新しく記事を書く')]",
-
-    # editor fields
-    "title_field": "div[data-placeholder='記事タイトル']",
-    "text_area": "div[data-placeholder='ご自由にお書きください。']",
-    "tag_input": "input[placeholder='ハッシュタグを追加する']",
-
-    # paid / free toggle
-    "paid_radio": "//label[contains(., '有料')]/input",
-    "free_radio": "//label[contains(., '無料')]/input",
-
-    # media upload actions
-    "body_plus": "//button[contains(@aria-label, '追加')]",
-    "media_menu_image": "//button[contains(., '画像')]",
+    "new_post_url": "https://note.com/notes/new",
+    "text_area": "textarea",
     "media_input": "input[type='file']",
-
-    # thumbnail upload
-    "thumbnail_button": "//button[contains(@aria-label, '画像をアップロード')]",
-    "thumbnail_input": "input[type='file']",
-
-    # publish buttons
-    "publish_next": "//button[contains(., '公開に進む')]",
-    "publish": "//button[contains(., '投稿する') or contains(., '更新する')]",
+    "thumbnail_input": "input[name='thumbnail']",
+    "paid_tab": "#paid-tab",
+    "free_tab": "#free-tab",
+    "tag_input": "input[name='tag']",
+    "publish": "button.publish",
 }
 
 
@@ -378,11 +359,7 @@ def post_to_note(
 
         # --- Open new post page ---
         try:
-            driver.get(NOTE_SELECTORS["home_url"])
-            wait.until(EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["post_menu"])))
-            driver.find_element(By.XPATH, NOTE_SELECTORS["post_menu"]).click()
-            wait.until(EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["new_post"])))
-            driver.find_element(By.XPATH, NOTE_SELECTORS["new_post"]).click()
+            driver.get(NOTE_SELECTORS["new_post_url"])
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])))
         except Exception as exc:
             path = _capture_screenshot()
@@ -392,32 +369,19 @@ def post_to_note(
 
         # --- Compose content / upload media ---
         try:
-            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["title_field"]).send_keys(text[:30])
-            body = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])
-            body.send_keys(Keys.CONTROL, "a")
-            body.send_keys(text)
-
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]).send_keys(text)
             for item in media:
-                driver.find_element(By.XPATH, NOTE_SELECTORS["body_plus"]).click()
-                wait.until(EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["media_menu_image"])))
-                driver.find_element(By.XPATH, NOTE_SELECTORS["media_menu_image"]).click()
                 path_f = _temp_file_from_b64(item)
-                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["media_input"])))
                 driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path_f)
                 os.unlink(path_f)
-
             if thumbnail:
-                driver.find_element(By.XPATH, NOTE_SELECTORS["thumbnail_button"]).click()
                 path_f = _temp_file_from_b64(thumbnail)
-                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"])))
                 driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path_f)
                 os.unlink(path_f)
-
             if paid:
-                driver.find_element(By.XPATH, NOTE_SELECTORS["paid_radio"]).click()
+                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["paid_tab"]).click()
             else:
-                driver.find_element(By.XPATH, NOTE_SELECTORS["free_radio"]).click()
-
+                driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["free_tab"]).click()
             for tag in tags:
                 tag_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["tag_input"])
                 tag_field.send_keys(tag)
@@ -430,9 +394,7 @@ def post_to_note(
 
         # --- Publish step ---
         try:
-            driver.find_element(By.XPATH, NOTE_SELECTORS["publish_next"]).click()
-            wait.until(EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["publish"])))
-            driver.find_element(By.XPATH, NOTE_SELECTORS["publish"]).click()
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["publish"]).click()
             wait.until(EC.url_contains("/notes/"))
             print("[NOTE] Post published")
             return {"posted": True}
