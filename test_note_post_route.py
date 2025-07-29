@@ -6,8 +6,12 @@ import pytest
 class DummyElement:
     def send_keys(self, *args, **kwargs):
         pass
+    def clear(self):
+        pass
     def click(self):
         pass
+    def is_enabled(self):
+        return True
 
 class DummyDriver:
     def __init__(self, fail=None, *args, **kwargs):
