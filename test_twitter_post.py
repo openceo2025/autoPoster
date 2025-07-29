@@ -6,6 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 import server
+import twitter_service
+import twitter_service
 
 
 class DummyAPI:
@@ -69,10 +71,10 @@ def make_client(monkeypatch, config=None, client_cls=None, api_cls=None):
     if config is not None:
         monkeypatch.setattr(server, 'CONFIG', config, raising=False)
     if client_cls:
-        monkeypatch.setattr(server.tweepy, 'Client', client_cls)
+        monkeypatch.setattr(twitter_service.tweepy, 'Client', client_cls)
     if api_cls:
-        monkeypatch.setattr(server.tweepy, 'API', api_cls)
-    monkeypatch.setattr(server.tweepy, 'OAuth1UserHandler', lambda *a, **kw: None)
+        monkeypatch.setattr(twitter_service.tweepy, 'API', api_cls)
+    monkeypatch.setattr(twitter_service.tweepy, 'OAuth1UserHandler', lambda *a, **kw: None)
     server.TWITTER_ACCOUNT_ERRORS = server.validate_twitter_accounts(server.CONFIG)
     server.TWITTER_CLIENTS = server.create_twitter_clients()
     return TestClient(server.app)

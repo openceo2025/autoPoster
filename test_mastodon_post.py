@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import server
+import mastodon_service
 
 class DummyMastodon:
     def __init__(self, *args, **kwargs):
@@ -61,7 +62,7 @@ def make_client(monkeypatch, config=None, mastodon_cls=None):
     if config is not None:
         monkeypatch.setattr(server, 'CONFIG', config, raising=False)
     if mastodon_cls:
-        monkeypatch.setattr(server, 'Mastodon', mastodon_cls)
+        monkeypatch.setattr(mastodon_service, 'Mastodon', mastodon_cls)
     server.MASTODON_ACCOUNT_ERRORS = server.validate_mastodon_accounts(server.CONFIG)
     server.MASTODON_CLIENTS = server.create_mastodon_clients()
     return TestClient(server.app)

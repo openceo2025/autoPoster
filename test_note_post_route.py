@@ -1,5 +1,6 @@
 import json
 import server
+import note_service
 from fastapi.testclient import TestClient
 import pytest
 
@@ -82,14 +83,14 @@ def make_client(monkeypatch, config=None):
 
 
 def patch_driver(monkeypatch, fail_selector=None):
-    monkeypatch.setattr(server.webdriver, 'Chrome', lambda *a, **kw: DummyDriver(fail_selector))
-    monkeypatch.setattr(server, 'WebDriverWait', lambda driver, timeout: DummyWait(driver, timeout))
+    monkeypatch.setattr(note_service.webdriver, 'Chrome', lambda *a, **kw: DummyDriver(fail_selector))
+    monkeypatch.setattr(note_service, 'WebDriverWait', lambda driver, timeout: DummyWait(driver, timeout))
     import tempfile
     def fake_temp(data, suffix=''):
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
         tmp.close()
         return tmp.name
-    monkeypatch.setattr(server, '_temp_file_from_b64', fake_temp)
+    monkeypatch.setattr(note_service, '_temp_file_from_b64', fake_temp)
 
 
 def test_note_post_success(monkeypatch, note_temp_config):
@@ -129,7 +130,7 @@ def test_note_post_misconfigured(monkeypatch, note_config_writer):
 
 
 def test_note_post_login_error(monkeypatch, note_temp_config):
-    fail = server.NOTE_SELECTORS['login_username']
+    fail = note_service.NOTE_SELECTORS['login_username']
     patch_driver(monkeypatch, fail_selector=fail)
     client = make_client(monkeypatch)
     payload = {'account': 'acc', 'text': 'x', 'paid': False}
@@ -141,7 +142,7 @@ def test_note_post_login_error(monkeypatch, note_temp_config):
 
 
 def test_note_post_publish_error(monkeypatch, note_temp_config):
-    fail = server.NOTE_SELECTORS['publish']
+    fail = note_service.NOTE_SELECTORS['publish']
     patch_driver(monkeypatch, fail_selector=fail)
     client = make_client(monkeypatch)
     payload = {'account': 'acc', 'text': 'x', 'paid': False}
