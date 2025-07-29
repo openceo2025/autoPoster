@@ -45,6 +45,11 @@ A simple REST API that receives post requests and forwards them to various servi
    python server.py
    ```
    The API will start on `http://localhost:8765`.
+   Use `--show-browser` if you want to see the Selenium browser window when
+   posting to note.com:
+   ```bash
+   python server.py --show-browser
+   ```
 5. To execute the tests, run:
    ```bash
    pytest

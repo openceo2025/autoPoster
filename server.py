@@ -31,6 +31,11 @@ else:
 
 app = FastAPI(title="autoPoster")
 
+# By default Selenium runs in headless mode.  When the server is started with
+# the --show-browser flag this global is set to False so a visible browser is
+# launched instead.
+HEADLESS = True
+
 
 def validate_mastodon_accounts(config: Dict) -> Dict[str, str]:
     """Validate Mastodon account configuration and return a map of errors."""
@@ -344,7 +349,8 @@ def post_to_note(
         return {"error": "Account not configured"}
 
     options = ChromeOptions()
-    options.add_argument("--headless")
+    if HEADLESS:
+        options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     print("[NOTE] Launching Chrome")
@@ -514,6 +520,18 @@ async def note_post(data: NotePostRequest):
     )
 
 if __name__ == "__main__":
+    import argparse
     import uvicorn
+
+    parser = argparse.ArgumentParser(description="autoPoster server")
+    parser.add_argument(
+        "--show-browser",
+        action="store_true",
+        help="Launch Selenium with a visible browser window",
+    )
+    args = parser.parse_args()
+
+    if args.show_browser:
+        HEADLESS = False
 
     uvicorn.run(app, host="127.0.0.1", port=8765)
