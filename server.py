@@ -137,6 +137,7 @@ NOTE_SELECTORS = {
     "login_username": "#email",
     "login_password": "#password",
     "login_submit": ".o-login__button button",
+    "login_link": "//*[self::a or self::button][contains(., 'ログイン')]",
     # After login we navigate to the home page then open the editor via the
     # 「投稿」 button. The old ``/notes/new`` URL no longer works directly.
     "home_url": "https://note.com/",
@@ -362,7 +363,13 @@ def post_to_note(
 
         # --- Login step ---
         try:
-            driver.get("https://note.com/login")
+            # Open the top page and click the login link to display the form
+            driver.get(NOTE_SELECTORS["home_url"])
+            wait.until(
+                EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["login_link"]))
+            )
+            driver.find_element(By.XPATH, NOTE_SELECTORS["login_link"]).click()
+            # Wait for the login form fields to appear
             wait.until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])
