@@ -523,6 +523,11 @@ def post_to_note(
 
         # --- Publish step ---
         try:
+            wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, NOTE_SELECTORS["publish_next"])
+                )
+            )
             driver.find_element(By.XPATH, NOTE_SELECTORS["publish_next"]).click()
             print("[NOTE] Proceeding to publish")
             wait.until(
