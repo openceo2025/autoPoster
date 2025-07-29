@@ -147,19 +147,12 @@ NOTE_SELECTORS = {
     # After login we navigate to the home page then open the editor via the
     # 「投稿」 button. The old ``/notes/new`` URL no longer works directly.
     "home_url": "https://note.com/",
-    # Home screen "投稿" element became a <button>. Search for either <button>
-    # or <a> to be robust across UI changes.
-    "post_menu": "//*[self::button or self::a][contains(., '投稿')]",
-    # "新しく記事を書く" is contained in a <button> element in the new UI.
-    "new_post_menu": "//button[contains(., '新しく記事を書く')]",
+    "post_menu": "//*[self::a or self::button][contains(., '投稿')]",
+    "new_post_menu": "//span[contains(., '新しく記事を書く')]",
 
-    # Editor fields use contenteditable DIVs. The title area also acts as a
-    # marker that the editor page has finished loading.
-    "editor_title": "div[data-placeholder='記事タイトル']",
+    # Editor fields use contenteditable DIVs instead of textareas.
     "title_area": "div[data-placeholder='記事タイトル']",
-    # Use a generic selector for the body area as the placeholder text can
-    # change over time.
-    "text_area": "div[contenteditable='true']",
+    "text_area": "div[data-placeholder='ご自由にお書きください。']",
 
     # File inputs appear after clicking their respective UI controls.
     "media_input": "input[type='file']",
@@ -430,9 +423,8 @@ def post_to_note(
                 EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["new_post_menu"]))
             )
             driver.find_element(By.XPATH, NOTE_SELECTORS["new_post_menu"]).click()
-            # Wait until the editor page loads by checking the title element
             wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["editor_title"]))
+                EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]))
             )
         except Exception as exc:
             path = _capture_screenshot()
