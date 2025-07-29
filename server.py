@@ -173,7 +173,10 @@ NOTE_SELECTORS = {
     # Body image uploads require clicking the "画像を追加" button to create a new
     # file input.
     "media_button": "//button[contains(@aria-label, '画像を追加')]",
-    "thumbnail_button": "//button[contains(@aria-label, '画像をアップロード')]",
+    "thumbnail_button": (
+        "//button[contains(@aria-label, '画像をアップロード') or "
+        "contains(., '画像をアップロード')]"
+    ),
     "thumbnail_input": "input[type='file']",
 
     # Paid/free toggle became radio-style labels.
