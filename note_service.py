@@ -142,11 +142,16 @@ def post_to_note(
     def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
         if trigger is not None:
             trigger.click()
-        WebDriverWait(driver, 20).until(
-            lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > 0
-        )
-        inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
-        inputs[-1].send_keys(path)
+        print("[DEBUG] waiting for input element")
+        try:
+            WebDriverWait(driver, 20).until(
+                lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > 0
+            )
+            inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
+            print(f"[DEBUG] input elements found: {len(inputs)}")
+            inputs[-1].send_keys(path)
+        except Exception as exc:
+            raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
 
     try:
         wait = WebDriverWait(driver, 20)
