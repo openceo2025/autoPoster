@@ -158,13 +158,15 @@ NOTE_SELECTORS = {
         " or contains(@href, '/notes/new')]"
     ),
 
-    # Editor fields use contenteditable DIVs. The title area also acts as a
-    # marker that the editor page has finished loading.
-    "editor_title": "div[data-placeholder='記事タイトル']",
-    "title_area": "div[data-placeholder='記事タイトル']",
+    # Editor fields use either a textarea or a contenteditable DIV depending on
+    # the current Note UI. The title element also acts as a marker that the
+    # editor page has finished loading.
+    "editor_title": "textarea[placeholder='記事タイトル'], div[data-placeholder='記事タイトル']",
+    # Title input area
+    "title_area": "textarea[placeholder='記事タイトル'], div[data-placeholder='記事タイトル']",
     # Use a generic selector for the body area as the placeholder text can
-    # change over time.
-    "text_area": "div[contenteditable='true']",
+    # change over time. The role attribute is stable across revisions.
+    "text_area": "div[contenteditable='true'][role='textbox']",
 
     # File inputs appear after clicking their respective UI controls.
     "media_input": "input[type='file']",
@@ -377,6 +379,13 @@ def post_to_note(
             print(f"[NOTE] Failed to save screenshot: {exc}")
         return tmp.name
 
+    def _fail_step(step: str, exc: Exception):
+        """Log step failure with screenshot and return error response."""
+        path = _capture_screenshot()
+        msg = f"{step} failed: {exc}"
+        print(f"[NOTE] {msg}; screenshot {path}")
+        return {"error": msg, "screenshot": path}
+
     try:
         wait = WebDriverWait(driver, 20)
 
@@ -419,10 +428,7 @@ def post_to_note(
             login_button.click()
             wait.until(lambda d: not d.current_url.startswith(login_base))
         except Exception as exc:
-            path = _capture_screenshot()
-            msg = f"login failed: {exc}"
-            print(f"[NOTE] {msg}; screenshot {path}")
-            return {"error": msg, "screenshot": path}
+            return _fail_step("login", exc)
 
         # --- Open new post page ---
         try:
@@ -440,47 +446,58 @@ def post_to_note(
                 EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["editor_title"]))
             )
         except Exception as exc:
-            path = _capture_screenshot()
-            msg = f"open new post failed: {exc}"
-            print(f"[NOTE] {msg}; screenshot {path}")
-            return {"error": msg, "screenshot": path}
+            return _fail_step("open new post", exc)
 
         # --- Compose content / upload media ---
         try:
             title_text = text.splitlines()[0][:20] if text else ""
             driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["title_area"]).send_keys(title_text)
+        except Exception as exc:
+            return _fail_step("enter title", exc)
 
+        try:
             body = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["text_area"])
             body.send_keys(text)
+        except Exception as exc:
+            return _fail_step("enter body", exc)
 
-            for item in media:
+        for item in media:
+            try:
                 path_f = _temp_file_from_b64(item)
                 driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["media_input"]).send_keys(path_f)
+            except Exception as exc:
+                return _fail_step("upload media", exc)
+            finally:
                 os.unlink(path_f)
 
-            if thumbnail:
+        if thumbnail:
+            try:
                 path_f = _temp_file_from_b64(thumbnail)
                 driver.find_element(By.XPATH, NOTE_SELECTORS["thumbnail_button"]).click()
                 wait.until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]))
                 )
                 driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["thumbnail_input"]).send_keys(path_f)
+            except Exception as exc:
+                return _fail_step("upload thumbnail", exc)
+            finally:
                 os.unlink(path_f)
 
+        try:
             if paid:
                 driver.find_element(By.XPATH, NOTE_SELECTORS["paid_tab"]).click()
             else:
                 driver.find_element(By.XPATH, NOTE_SELECTORS["free_tab"]).click()
+        except Exception as exc:
+            return _fail_step("set paid/free", exc)
 
-            for tag in tags:
+        for tag in tags:
+            try:
                 tag_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["tag_input"])
                 tag_field.send_keys(tag)
                 tag_field.send_keys(Keys.ENTER)
-        except Exception as exc:
-            path = _capture_screenshot()
-            msg = f"compose failed: {exc}"
-            print(f"[NOTE] {msg}; screenshot {path}")
-            return {"error": msg, "screenshot": path}
+            except Exception as exc:
+                return _fail_step("add tag", exc)
 
         # --- Publish step ---
         try:
@@ -493,10 +510,7 @@ def post_to_note(
             print("[NOTE] Post published")
             return {"posted": True}
         except Exception as exc:
-            path = _capture_screenshot()
-            msg = f"publish failed: {exc}"
-            print(f"[NOTE] {msg}; screenshot {path}")
-            return {"error": msg, "screenshot": path}
+            return _fail_step("publish", exc)
     finally:
         print("[NOTE] Closing browser")
         driver.quit()
