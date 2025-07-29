@@ -140,7 +140,7 @@ NOTE_SELECTORS = {
     # After login we navigate to the home page then open the editor via the
     # 「投稿」 button. The old ``/notes/new`` URL no longer works directly.
     "home_url": "https://note.com/",
-    "post_menu": "//*[self::a or self::button][contains(., '投稿')]",
+    "post_menu": "//a[contains(., '投稿')]",
     "new_post_menu": "//span[contains(., '新しく記事を書く')]",
 
     # Editor fields use contenteditable DIVs instead of textareas.
@@ -363,21 +363,10 @@ def post_to_note(
         # --- Login step ---
         try:
             driver.get("https://note.com/login")
-            wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]))
-            )
-            username_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])
-            username_field.clear()
-            username_field.send_keys(creds["username"])
-            password_field = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"])
-            password_field.clear()
-            password_field.send_keys(creds["password"])
-            wait.until(
-                lambda d: d.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).is_enabled()
-            )
-            login_btn = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"])
-            login_btn.click()
-            login_btn.click()
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["login_username"])))
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_username"]).send_keys(creds["username"])
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_password"]).send_keys(creds["password"])
+            driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"]).click()
             wait.until(EC.url_contains("/"))
         except Exception as exc:
             path = _capture_screenshot()
