@@ -147,12 +147,18 @@ NOTE_SELECTORS = {
     # After login we navigate to the home page then open the editor via the
     # 「投稿」 button. The old ``/notes/new`` URL no longer works directly.
     "home_url": "https://note.com/",
-    "post_menu": "//*[self::a or self::button][contains(., '投稿')]",
-    "new_post_menu": "//span[contains(., '新しく記事を書く')]",
+    # "投稿" is now a <button> element. Allow either <button> or <a>.
+    "post_menu": "//*[self::button or self::a][contains(., '投稿')]",
+    # The "新しく記事を書く" control is also a button.
+    "new_post_menu": "//button[contains(., '新しく記事を書く')]",
 
     # Editor fields use contenteditable DIVs instead of textareas.
     "title_area": "div[data-placeholder='記事タイトル']",
-    "text_area": "div[data-placeholder='ご自由にお書きください。']",
+    # Some editors changed the body placeholder text. Match any contenteditable
+    # area instead of relying on a specific placeholder.
+    "text_area": "div[contenteditable='true']",
+    # Used to wait for the editor page to load.
+    "editor_title": "div[data-placeholder='記事タイトル']",
 
     # File inputs appear after clicking their respective UI controls.
     "media_input": "input[type='file']",
@@ -414,17 +420,23 @@ def post_to_note(
 
         # --- Open new post page ---
         try:
+            # Go to the home page first then open the editor via the 投稿 menu.
             driver.get(NOTE_SELECTORS["home_url"])
+            # 投稿 button became a <button> element; wait for it to be clickable.
             wait.until(
                 EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["post_menu"]))
             )
             driver.find_element(By.XPATH, NOTE_SELECTORS["post_menu"]).click()
+
+            # Click the 新しく記事を書く button and wait for the editor page.
             wait.until(
                 EC.element_to_be_clickable((By.XPATH, NOTE_SELECTORS["new_post_menu"]))
             )
             driver.find_element(By.XPATH, NOTE_SELECTORS["new_post_menu"]).click()
+
+            # The editor loads asynchronously; wait until the title field appears.
             wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["text_area"]))
+                EC.presence_of_element_located((By.CSS_SELECTOR, NOTE_SELECTORS["editor_title"]))
             )
         except Exception as exc:
             path = _capture_screenshot()
