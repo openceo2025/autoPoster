@@ -341,10 +341,17 @@ def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
 
 def _temp_file_from_b64(data: str, suffix: str = "") -> str:
     """Write base64 data to a temporary file and return its path."""
-    raw = base64.b64decode(data)
+    try:
+        raw = base64.b64decode(data)
+    except Exception as exc:
+        if not HEADLESS:
+            print(f"[DEBUG] base64 decode failed: {exc}")
+        raise
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
     tmp.write(raw)
     tmp.close()
+    if not HEADLESS:
+        print(f"[DEBUG] wrote {len(raw)} bytes to {tmp.name}")
     return tmp.name
 
 
@@ -395,10 +402,19 @@ def post_to_note(
     def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
         """Wait for a new file input to appear and send the file path."""
         existing = driver.find_elements(By.CSS_SELECTOR, input_selector)
+        if not HEADLESS:
+            print(f"[DEBUG] existing inputs: {len(existing)}")
         if trigger is not None:
+            if not HEADLESS:
+                print("[DEBUG] clicking trigger for new input")
             trigger.click()
+        if not HEADLESS:
+            print("[DEBUG] waiting for new input element")
         wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > len(existing))
-        driver.find_elements(By.CSS_SELECTOR, input_selector)[-1].send_keys(path)
+        inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
+        if not HEADLESS:
+            print(f"[DEBUG] inputs after click: {len(inputs)}")
+        inputs[-1].send_keys(path)
 
     try:
         wait = WebDriverWait(driver, 20)
@@ -483,8 +499,19 @@ def post_to_note(
             try:
                 print("[NOTE] Uploading media item")
                 path_f = _temp_file_from_b64(item)
-                button = driver.find_element(By.XPATH, NOTE_SELECTORS["media_button"])
+                if not HEADLESS:
+                    exists = os.path.exists(path_f)
+                    print(f"[DEBUG] temp file {path_f} exists={exists}")
+                buttons = driver.find_elements(By.XPATH, NOTE_SELECTORS["media_button"])
+                if not HEADLESS:
+                    print(f"[DEBUG] media_button elements found: {len(buttons)}")
+                if not buttons:
+                    raise Exception("media button not found")
+                button = buttons[0]
                 _send_to_new_input(NOTE_SELECTORS["media_input"], path_f, button)
+                if not HEADLESS:
+                    sc_path = _capture_screenshot()
+                    print(f"[DEBUG] screenshot after upload attempt: {sc_path}")
                 print("[NOTE] Media item uploaded")
             except Exception as exc:
                 return _fail_step("upload media", exc)
@@ -495,8 +522,19 @@ def post_to_note(
             try:
                 print("[NOTE] Uploading thumbnail")
                 path_f = _temp_file_from_b64(thumbnail)
-                button = driver.find_element(By.XPATH, NOTE_SELECTORS["thumbnail_button"])
+                if not HEADLESS:
+                    exists = os.path.exists(path_f)
+                    print(f"[DEBUG] thumbnail temp {path_f} exists={exists}")
+                buttons = driver.find_elements(By.XPATH, NOTE_SELECTORS["thumbnail_button"])
+                if not HEADLESS:
+                    print(f"[DEBUG] thumbnail_button elements found: {len(buttons)}")
+                if not buttons:
+                    raise Exception("thumbnail button not found")
+                button = buttons[0]
                 _send_to_new_input(NOTE_SELECTORS["thumbnail_input"], path_f, button)
+                if not HEADLESS:
+                    sc_path = _capture_screenshot()
+                    print(f"[DEBUG] screenshot after thumbnail upload: {sc_path}")
                 print("[NOTE] Thumbnail uploaded")
             except Exception as exc:
                 return _fail_step("upload thumbnail", exc)
