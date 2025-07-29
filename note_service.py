@@ -186,7 +186,8 @@ def post_to_note(
             )
             print("[NOTE] Logged in")
         except Exception as exc:
-            return _fail_step("login", exc)
+            msg = f"{exc} (URL: {driver.current_url})"
+            return _fail_step("login", Exception(msg))
 
         # --- Open new post page ---
         try:
