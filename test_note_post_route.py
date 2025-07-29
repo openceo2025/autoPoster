@@ -18,8 +18,10 @@ class DummyDriver:
     def __init__(self, fail=None, *args, **kwargs):
         self.fail = fail
         self.actions = []
+        self.current_url = ''
     def get(self, url):
         self.actions.append(('get', url))
+        self.current_url = url
     def find_element(self, by, selector, *args, **kwargs):
         self.actions.append(('find', selector))
         if selector == self.fail:
