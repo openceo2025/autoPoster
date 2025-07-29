@@ -180,9 +180,7 @@ def post_to_note(
             login_button = driver.find_element(By.CSS_SELECTOR, NOTE_SELECTORS["login_submit"])
             login_button.click()
             WebDriverWait(driver, 40).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, NOTE_SELECTORS["post_menu"])
-                )
+                lambda d: not d.current_url.startswith(login_base)
             )
             print("[NOTE] Logged in")
         except Exception as exc:
