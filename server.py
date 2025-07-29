@@ -170,9 +170,10 @@ NOTE_SELECTORS = {
 
     # File inputs appear after clicking their respective UI controls.
     "media_input": "input[type='file']",
-    # Body image uploads require clicking the "画像を追加" button to create a new
-    # file input.
-    "media_button": "//button[contains(@aria-label, '画像を追加')]",
+    # Body image uploads are triggered via a menu where the "画像" option is
+    # shown. Match either visible text or an aria-label containing "画像" so the
+    # selector keeps working if the surrounding UI changes.
+    "media_button": "//button[contains(@aria-label, '画像') or contains(., '画像')]",
     "thumbnail_button": (
         "//button[contains(@aria-label, '画像をアップロード') or "
         "contains(., '画像をアップロード')]"
@@ -400,20 +401,17 @@ def post_to_note(
         return {"error": msg, "screenshot": path}
 
     def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
-        """Wait for a new file input to appear and send the file path."""
-        existing = driver.find_elements(By.CSS_SELECTOR, input_selector)
-        if not HEADLESS:
-            print(f"[DEBUG] existing inputs: {len(existing)}")
+        """Click the trigger and send the file path to the last file input."""
         if trigger is not None:
             if not HEADLESS:
-                print("[DEBUG] clicking trigger for new input")
+                print("[DEBUG] clicking trigger for input")
             trigger.click()
         if not HEADLESS:
-            print("[DEBUG] waiting for new input element")
-        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > len(existing))
+            print("[DEBUG] waiting for input element")
+        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > 0)
         inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
         if not HEADLESS:
-            print(f"[DEBUG] inputs after click: {len(inputs)}")
+            print(f"[DEBUG] input elements found: {len(inputs)}")
         inputs[-1].send_keys(path)
 
     try:
