@@ -156,7 +156,6 @@ def post_to_note(
     def _send_to_new_input(
         input_selector: str,
         path: str,
-        trigger: Optional[Any] = None,
         frame_index: Optional[int] = None,
     ):
         # no clicking here
