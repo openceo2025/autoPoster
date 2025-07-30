@@ -165,9 +165,9 @@ def post_to_note(
         try:
             if frame_index is not None:
                 frames = driver.find_elements(By.TAG_NAME, "iframe")
-                if frame_index >= len(frames) or frame_index < -len(frames):
-                    raise Exception(f"frame index {frame_index} out of range")
-                if hasattr(driver, "switch_to"):
+                if not frames or frame_index >= len(frames) or frame_index < -len(frames):
+                    print(f"[DEBUG] no iframe at index {frame_index}")
+                elif hasattr(driver, "switch_to"):
                     driver.switch_to.frame(frames[frame_index])
                     frame_switched = True
 
