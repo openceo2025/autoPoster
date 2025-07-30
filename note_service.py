@@ -185,8 +185,17 @@ def post_to_note(
                 finally:
                     driver.switch_to.default_content()
 
+            path_ss = _capture_screenshot()
+            print(f"[DEBUG] screenshot saved: {path_ss}")
+            print(f"[DEBUG] title: {driver.title}")
+            print(f"[DEBUG] url: {driver.current_url}")
+
             raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
         except Exception as exc:
+            path_ss = _capture_screenshot()
+            print(f"[DEBUG] screenshot saved: {path_ss}")
+            print(f"[DEBUG] title: {driver.title}")
+            print(f"[DEBUG] url: {driver.current_url}")
             raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
 
         try:
@@ -219,6 +228,10 @@ def post_to_note(
                 )
             inputs[-1].send_keys(path)
         except Exception as exc:
+            path_ss = _capture_screenshot()
+            print(f"[DEBUG] screenshot saved: {path_ss}")
+            print(f"[DEBUG] title: {driver.title}")
+            print(f"[DEBUG] url: {driver.current_url}")
             raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
 
     try:
