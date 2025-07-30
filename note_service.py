@@ -153,14 +153,57 @@ def post_to_note(
                 f"[DEBUG] iframe {idx}: id={frame_id} class={frame_class} src={frame_src}"
             )
 
-    def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
+    def _send_to_new_input(
+        input_selector: str,
+        path: str,
+        trigger: Optional[Any] = None,
+        frame_index: Optional[int] = None,
+    ):
         # no clicking here
         _log_iframes(driver)
-        print("[DEBUG] waiting for input element")
+        frame_switched = False
         try:
+            if frame_index is not None:
+                frames = driver.find_elements(By.TAG_NAME, "iframe")
+                if frame_index >= len(frames) or frame_index < -len(frames):
+                    raise Exception(f"frame index {frame_index} out of range")
+                if hasattr(driver, "switch_to"):
+                    driver.switch_to.frame(frames[frame_index])
+                    frame_switched = True
+
+            print("[DEBUG] waiting for input element")
             WebDriverWait(driver, 20).until(
                 lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > 0
             )
+
+            inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
+            print(f"[DEBUG] input elements found: {len(inputs)}")
+            for idx, inp in enumerate(inputs):
+                try:
+                    inp_id = inp.get_attribute("id")
+                    inp_class = inp.get_attribute("class")
+                    inp_name = inp.get_attribute("name")
+                except Exception:
+                    inp_id = inp_class = inp_name = None
+                try:
+                    in_iframe = driver.execute_script(
+                        "return arguments[0].ownerDocument !== document",
+                        inp,
+                    )
+                except Exception:
+                    in_iframe = None
+                try:
+                    in_shadow = driver.execute_script(
+                        "return arguments[0].getRootNode() instanceof ShadowRoot",
+                        inp,
+                    )
+                except Exception:
+                    in_shadow = None
+                print(
+                    f"[DEBUG] input {idx}: id={inp_id} class={inp_class} name={inp_name} "
+                    f"iframe={in_iframe} shadow={in_shadow}"
+                )
+            inputs[-1].send_keys(path)
         except TimeoutException as exc:
             try:
                 count = driver.execute_script(
@@ -197,42 +240,9 @@ def post_to_note(
             print(f"[DEBUG] title: {driver.title}")
             print(f"[DEBUG] url: {driver.current_url}")
             raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
-
-        try:
-            inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
-            print(f"[DEBUG] input elements found: {len(inputs)}")
-            for idx, inp in enumerate(inputs):
-                try:
-                    inp_id = inp.get_attribute("id")
-                    inp_class = inp.get_attribute("class")
-                    inp_name = inp.get_attribute("name")
-                except Exception:
-                    inp_id = inp_class = inp_name = None
-                try:
-                    in_iframe = driver.execute_script(
-                        "return arguments[0].ownerDocument !== document",
-                        inp,
-                    )
-                except Exception:
-                    in_iframe = None
-                try:
-                    in_shadow = driver.execute_script(
-                        "return arguments[0].getRootNode() instanceof ShadowRoot",
-                        inp,
-                    )
-                except Exception:
-                    in_shadow = None
-                print(
-                    f"[DEBUG] input {idx}: id={inp_id} class={inp_class} name={inp_name} "
-                    f"iframe={in_iframe} shadow={in_shadow}"
-                )
-            inputs[-1].send_keys(path)
-        except Exception as exc:
-            path_ss = _capture_screenshot()
-            print(f"[DEBUG] screenshot saved: {path_ss}")
-            print(f"[DEBUG] title: {driver.title}")
-            print(f"[DEBUG] url: {driver.current_url}")
-            raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
+        finally:
+            if frame_switched and hasattr(driver, "switch_to"):
+                driver.switch_to.default_content()
 
     try:
         wait = WebDriverWait(driver, 20)
@@ -318,7 +328,9 @@ def post_to_note(
                     raise Exception("media button not found")
                 button = buttons[0]
                 button.click()
-                _send_to_new_input(NOTE_SELECTORS["media_input"], path_f)
+                _send_to_new_input(
+                    NOTE_SELECTORS["media_input"], path_f, frame_index=0
+                )
                 print("[NOTE] Media item uploaded")
             except Exception as exc:
                 return _fail_step("upload media", exc)
@@ -334,7 +346,9 @@ def post_to_note(
                     raise Exception("thumbnail button not found")
                 button = buttons[0]
                 button.click()
-                _send_to_new_input(NOTE_SELECTORS["thumbnail_input"], path_f)
+                _send_to_new_input(
+                    NOTE_SELECTORS["thumbnail_input"], path_f, frame_index=0
+                )
                 print("[NOTE] Thumbnail uploaded")
             except Exception as exc:
                 return _fail_step("upload thumbnail", exc)
