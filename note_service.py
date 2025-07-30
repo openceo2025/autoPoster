@@ -11,6 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 # By default Selenium runs in headless mode. It can be toggled via the
 # HEADLESS variable which the server updates when started with --show-browser.
@@ -160,6 +161,35 @@ def post_to_note(
             WebDriverWait(driver, 20).until(
                 lambda d: len(d.find_elements(By.CSS_SELECTOR, input_selector)) > 0
             )
+        except TimeoutException as exc:
+            try:
+                count = driver.execute_script(
+                    "return document.querySelectorAll(arguments[0]).length",
+                    input_selector,
+                )
+                print(f"[DEBUG] shadow search result: {count}")
+            except Exception as js_exc:
+                print(f"[DEBUG] shadow search error: {js_exc}")
+
+            frames = driver.find_elements(By.TAG_NAME, "iframe")
+            for idx, frame in enumerate(frames):
+                try:
+                    driver.switch_to.frame(frame)
+                    count = driver.execute_script(
+                        "return document.querySelectorAll(arguments[0]).length",
+                        input_selector,
+                    )
+                    print(f"[DEBUG] iframe {idx} shadow search result: {count}")
+                except Exception as js_exc:
+                    print(f"[DEBUG] iframe {idx} shadow search error: {js_exc}")
+                finally:
+                    driver.switch_to.default_content()
+
+            raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
+        except Exception as exc:
+            raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
+
+        try:
             inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
             print(f"[DEBUG] input elements found: {len(inputs)}")
             for idx, inp in enumerate(inputs):
