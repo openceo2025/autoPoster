@@ -148,6 +148,31 @@ def post_to_note(
             )
             inputs = driver.find_elements(By.CSS_SELECTOR, input_selector)
             print(f"[DEBUG] input elements found: {len(inputs)}")
+            for idx, inp in enumerate(inputs):
+                try:
+                    inp_id = inp.get_attribute("id")
+                    inp_class = inp.get_attribute("class")
+                    inp_name = inp.get_attribute("name")
+                except Exception:
+                    inp_id = inp_class = inp_name = None
+                try:
+                    in_iframe = driver.execute_script(
+                        "return arguments[0].ownerDocument !== document",
+                        inp,
+                    )
+                except Exception:
+                    in_iframe = None
+                try:
+                    in_shadow = driver.execute_script(
+                        "return arguments[0].getRootNode() instanceof ShadowRoot",
+                        inp,
+                    )
+                except Exception:
+                    in_shadow = None
+                print(
+                    f"[DEBUG] input {idx}: id={inp_id} class={inp_class} name={inp_name} "
+                    f"iframe={in_iframe} shadow={in_shadow}"
+                )
             inputs[-1].send_keys(path)
         except Exception as exc:
             raise Exception(f"{exc.__class__.__name__}: {exc}") from exc
