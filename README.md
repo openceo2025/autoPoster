@@ -187,6 +187,22 @@ curl -X POST http://localhost:8765/note/post \
      -d '{"account": "account1", "text": "Another Note", "paid": false, "tags": []}'
 ```
 
+## Example scripts
+
+The repository provides three helper scripts that demonstrate how to send posts
+to each service: `send_mastodon_post.py`, `send_twitter_post.py` and
+`send_note_post.py`.  Each script contains placeholder file paths such as
+`path/to/image.png`.  Replace these strings with the paths to your own media
+files before running the scripts:
+
+```python
+MEDIA_PATH = "path/to/image.png"  # update with your image file
+```
+
+If you wish to post multiple images with Note, edit `MEDIA_PATHS` and
+`THUMBNAIL_PATH` similarly. Paths can be absolute or relative; use whichever is
+convenient on your system.
+
 ## Troubleshooting
 
 If requests to `/mastodon/post` or `/twitter/post` return

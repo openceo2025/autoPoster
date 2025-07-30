@@ -5,7 +5,7 @@ import requests
 URL = "http://localhost:8765/twitter/post"
 ACCOUNT = "account1"  # must match an entry in config.json
 TEXT = "これはTwitterへの自動投稿テストです"
-MEDIA_PATH = "/path/to/image.png"  # replace with an actual file path
+MEDIA_PATH = "path/to/image.png"  # replace with the path to your media file
 
 
 def main():
