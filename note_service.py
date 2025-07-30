@@ -139,8 +139,22 @@ def post_to_note(
         print(f"[NOTE] {msg}; screenshot {path}")
         return {"error": msg, "screenshot": path}
 
+    def _log_iframes(driver):
+        frames = driver.find_elements(By.TAG_NAME, "iframe")
+        for idx, frame in enumerate(frames):
+            try:
+                frame_id = frame.get_attribute("id")
+                frame_class = frame.get_attribute("class")
+                frame_src = frame.get_attribute("src")
+            except Exception:
+                frame_id = frame_class = frame_src = None
+            print(
+                f"[DEBUG] iframe {idx}: id={frame_id} class={frame_class} src={frame_src}"
+            )
+
     def _send_to_new_input(input_selector: str, path: str, trigger: Optional[Any] = None):
         # no clicking here
+        _log_iframes(driver)
         print("[DEBUG] waiting for input element")
         try:
             WebDriverWait(driver, 20).until(
