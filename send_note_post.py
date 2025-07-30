@@ -5,10 +5,10 @@ import requests
 URL = "http://localhost:8765/note/post"
 ACCOUNT = "nicchi"  # must match an entry in config.json
 TEXT = "これはテスト投稿です"
-THUMBNAIL_PATH = "path/to/thumbnail.png"  # replace with the path to your thumbnail
+THUMBNAIL_PATH = "example/titeletest.png"  # replace with the path to your thumbnail
 MEDIA_PATHS = [
-    "path/to/image1.png",
-    "path/to/image2.jpg",
+    "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png",
+    "example/b6701f05-1e2e-4776-a7c3-69c13c46sssss9514.jpg",
 ]  # optional additional images
 PAID = False
 TAGS = ["test", "ai生成"]
