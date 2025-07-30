@@ -5,7 +5,7 @@ import requests
 URL = "http://localhost:8765/mastodon/post"
 ACCOUNT = "account1"  # must match an entry in config.json
 TEXT = "これは自動投稿のテストです"
-MEDIA_PATH = "/path/to/image.png"  # replace with an actual file path
+MEDIA_PATH = "path/to/image.png"  # replace with the path to your media file
 
 
 def main():
