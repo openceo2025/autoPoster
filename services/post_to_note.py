@@ -21,6 +21,7 @@ def create_note_client() -> NoteClient | None:
         return client
     except Exception as exc:
         print(f"Failed to init Note client: {exc}")
+        print(f"CONFIG used for NoteClient: {CONFIG}")
         return None
 
 
@@ -30,6 +31,7 @@ NOTE_CLIENT = create_note_client()
 def post_to_note(content: str, images: List[Path] = []) -> dict:
     """Create a Note draft with optional images and return draft details."""
     if NOTE_CLIENT is None:
+        print('NOTE_CLIENT is None')
         return {"error": "Note client unavailable"}
 
     body = f"<p>{content}</p>"
