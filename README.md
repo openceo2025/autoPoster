@@ -139,14 +139,15 @@ Example using `curl`:
 ### `POST /note/draft`
 
 Create a draft on a configured Note account. Specify the account name in
-`account`, send the draft text in `content`, and optionally include base64
-encoded images in the `images` list.
+`account`, send the draft text in `content`, and optionally include images by
+providing a list of **file paths** in the `images` list. Each path should point
+to a file accessible to the server and will be uploaded as part of the draft.
 
 ```json
 {
   "account": "default",
   "content": "Hello Note",
-  "images": ["base64image"]
+  "images": ["example/test.png"]
 }
 ```
 
@@ -155,7 +156,7 @@ Example using `curl`:
 ```bash
 curl -X POST http://localhost:8765/note/draft \
      -H 'Content-Type: application/json' \
-     -d '{"account": "default", "content": "Hello Note", "images": ["b64"]}'
+     -d '{"account": "default", "content": "Hello Note", "images": ["example/test.png"]}'
 ```
 
 ## Troubleshooting

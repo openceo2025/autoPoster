@@ -58,6 +58,8 @@ def post_to_note(content: str, images: List[Path] = [], account: str | None = No
 
     body = f"<p>{content}</p>"
     for img in images:
+        if not img.exists():
+            return {"error": f"Image file not found: {img}"}
         try:
             url = client.upload_image(img)
             body += f'<img src="{url}" />'
