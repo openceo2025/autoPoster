@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
+print(f"Loading config from {CONFIG_PATH}")
 
 # Load config if available
 if CONFIG_PATH.exists():
@@ -20,6 +21,7 @@ if CONFIG_PATH.exists():
         CONFIG = json.load(f)
 else:
     CONFIG = {}
+print(json.dumps(CONFIG.get('note', {}), indent=2))
 
 app = FastAPI(title="autoPoster")
 
