@@ -13,15 +13,21 @@ else:
     CONFIG = {}
 
 
-def create_note_client() -> NoteClient | None:
-    """Initialize a NoteClient using the first configured Note account."""
+def create_note_client(account: str | None = None) -> NoteClient | None:
+    """Initialize a NoteClient using the specified Note account."""
     note_cfg = CONFIG.get("note", {})
     accounts = note_cfg.get("accounts") or {}
     if not accounts:
         print("No Note accounts configured")
         return None
 
-    if "default" in accounts:
+    acct = None
+    if account:
+        acct = accounts.get(account)
+        if not acct:
+            print(f"No Note account configured for {account}")
+            return None
+    elif "default" in accounts:
         acct = accounts["default"]
     else:
         acct = next(iter(accounts.values()))
@@ -43,22 +49,23 @@ def create_note_client() -> NoteClient | None:
 NOTE_CLIENT = create_note_client()
 
 
-def post_to_note(content: str, images: List[Path] = []) -> dict:
+def post_to_note(content: str, images: List[Path] = [], account: str | None = None) -> dict:
     """Create a Note draft with optional images and return draft details."""
-    if NOTE_CLIENT is None:
+    client = NOTE_CLIENT if account is None else create_note_client(account)
+    if client is None:
         print('NOTE_CLIENT is None')
         return {"error": "Note client unavailable"}
 
     body = f"<p>{content}</p>"
     for img in images:
         try:
-            url = NOTE_CLIENT.upload_image(img)
+            url = client.upload_image(img)
             body += f'<img src="{url}" />'
         except Exception as exc:
             return {"error": f"Image upload failed: {exc}"}
 
     try:
-        draft_info = NOTE_CLIENT.create_draft("Auto Post", body)
+        draft_info = client.create_draft("Auto Post", body)
     except Exception as exc:
         return {"error": str(exc)}
 

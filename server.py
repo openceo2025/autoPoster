@@ -216,6 +216,7 @@ class TwitterPostRequest(BaseModel):
 
 
 class NotePostRequest(BaseModel):
+    account: str
     content: str
     images: Optional[List[str]] = None
 
@@ -298,7 +299,7 @@ async def twitter_post(data: TwitterPostRequest):
 @app.post("/note/draft")
 async def note_draft(data: NotePostRequest):
     paths = [Path(p) for p in data.images] if data.images else []
-    return post_to_note(data.content, paths)
+    return post_to_note(data.content, paths, data.account)
 
 if __name__ == "__main__":
     import uvicorn
