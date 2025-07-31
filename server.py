@@ -7,6 +7,7 @@ from io import BytesIO
 from mastodon import Mastodon
 import tweepy
 from note_client import NoteClient
+from services.post_to_note import post_to_note
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -212,6 +213,11 @@ class TwitterPostRequest(BaseModel):
     media: Optional[List[str]] = None
 
 
+class NotePostRequest(BaseModel):
+    content: str
+    images: Optional[List[str]] = None
+
+
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
     if account in MASTODON_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
@@ -285,6 +291,12 @@ async def mastodon_post(data: MastodonPostRequest):
 @app.post("/twitter/post")
 async def twitter_post(data: TwitterPostRequest):
     return post_to_twitter(data.account, data.text, data.media)
+
+
+@app.post("/note/draft")
+async def note_draft(data: NotePostRequest):
+    paths = [Path(p) for p in data.images] if data.images else []
+    return post_to_note(data.content, paths)
 
 if __name__ == "__main__":
     import uvicorn

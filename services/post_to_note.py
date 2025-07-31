@@ -28,7 +28,7 @@ NOTE_CLIENT = create_note_client()
 
 
 def post_to_note(content: str, images: List[Path] = []) -> dict:
-    """Create a Note draft with optional images."""
+    """Create a Note draft with optional images and return draft details."""
     if NOTE_CLIENT is None:
         return {"error": "Note client unavailable"}
 
@@ -41,8 +41,8 @@ def post_to_note(content: str, images: List[Path] = []) -> dict:
             return {"error": f"Image upload failed: {exc}"}
 
     try:
-        NOTE_CLIENT.create_draft("Auto Post", body)
+        draft_info = NOTE_CLIENT.create_draft("Auto Post", body)
     except Exception as exc:
         return {"error": str(exc)}
 
-    return {"posted": True}
+    return draft_info
