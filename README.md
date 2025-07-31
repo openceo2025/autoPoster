@@ -141,7 +141,8 @@ Example using `curl`:
 Create a draft on a configured Note account. Specify the account name in
 `account`, send the draft text in `content`, and optionally include images by
 providing a list of **file paths** in the `images` list. Each path should point
-to a file accessible to the server and will be uploaded as part of the draft.
+to a file accessible to the server and will be uploaded via
+`/api/v1/upload_image` before being inserted into the draft body.
 
 ```json
 {

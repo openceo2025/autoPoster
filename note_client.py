@@ -20,7 +20,9 @@ class NoteClient:
         username = note_cfg.get("username")
         password = note_cfg.get("password")
         url = f"{self.base_url}/api/v1/sessions/sign_in"
-        resp = self.session.post(url, data={"login": username, "password": password})
+        resp = self.session.post(
+            url, json={"login": username, "password": password}
+        )
         self.session.cookies.update(resp.cookies)
         print(f'Login status: {resp.status_code}, body: {resp.text}')
         if resp.status_code not in (200, 201):
@@ -34,7 +36,9 @@ class NoteClient:
                 resp = self.session.post(url, files={"file": fh})
             resp.raise_for_status()
             data = resp.json()
-            return data.get("url") or data["cdn_url"]
+            if "data" in data:
+                data = data["data"]
+            return data.get("url") or data.get("cdn_url")
         except Exception as exc:  # Mimic the simple try/except pattern
             raise RuntimeError(f"Image upload failed: {exc}") from exc
 
@@ -42,7 +46,10 @@ class NoteClient:
         """Create a draft text note and return identifiers."""
         post_url = f"{self.base_url}/api/v1/text_notes"
         try:
-            resp = self.session.post(post_url, json={"title": title})
+            resp = self.session.post(
+                post_url,
+                json={"name": title, "body": "", "template_key": None},
+            )
             resp.raise_for_status()
             data = resp.json()
             note_id = data.get("id")
@@ -51,7 +58,7 @@ class NoteClient:
             put_url = f"{self.base_url}/api/v1/text_notes/{note_id}"
             resp2 = self.session.put(
                 put_url,
-                json={"title": title, "body": body_html, "status": "draft"},
+                json={"name": title, "body": body_html, "status": "draft"},
             )
             resp2.raise_for_status()
             return {

@@ -15,8 +15,9 @@ class DummySession:
         self.put_args = []
         self.cookies = requests.cookies.RequestsCookieJar()
 
-    def post(self, url, data=None, files=None, **kwargs):
-        self.post_args.append((url, data, files))
+    def post(self, url, data=None, files=None, json=None, **kwargs):
+        payload = json if json is not None else data
+        self.post_args.append((url, payload, files))
         resp = type('Resp', (), {})()
         resp.status_code = self.status_code
         resp.cookies = requests.cookies.RequestsCookieJar()
