@@ -4,7 +4,7 @@ import requests
 
 URL = "http://localhost:8765/note/draft"
 CONTENT = "これはNoteの下書きテストです"
-IMAGE_PATH = "/path/to/image.png"  # replace with an actual file path
+IMAGE_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with an actual file path
 
 
 def main():
