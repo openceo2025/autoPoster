@@ -55,6 +55,15 @@ def test_login_success():
     assert session.post_args[0][1] == {'login': 'u', 'password': 'p'}
     assert session.cookies.get('sid') == 'cookie'
 
+def test_login_success_201():
+    cfg = {'note': {'username': 'u', 'password': 'p', 'base_url': 'http://host'}}
+    session = DummySession(201)
+    client = NoteClient(cfg, session=session)
+    client.login()
+    assert session.post_args[0][0] == 'http://host/api/v1/sessions/sign_in'
+    assert session.post_args[0][1] == {'login': 'u', 'password': 'p'}
+    assert session.cookies.get('sid') == 'cookie'
+
 def test_login_failure():
     cfg = {'note': {'username': 'u', 'password': 'p', 'base_url': 'http://host'}}
     session = DummySession(401)
