@@ -6,6 +6,7 @@ import base64
 from io import BytesIO
 from mastodon import Mastodon
 import tweepy
+from note_client import NoteClient
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -75,6 +76,57 @@ def create_mastodon_clients():
 
 
 MASTODON_CLIENTS = create_mastodon_clients()
+
+
+def validate_note_accounts(config: Dict) -> Dict[str, str]:
+    """Validate Note account configuration and return a map of errors."""
+    errors: Dict[str, str] = {}
+    accounts = config.get("note", {}).get("accounts")
+    if not accounts:
+        errors["_general"] = "note.accounts section missing or empty"
+        return errors
+
+    for name, info in accounts.items():
+        account_errors = []
+        username = info.get("username")
+        password = info.get("password")
+        if not username:
+            account_errors.append("missing username")
+        if not password:
+            account_errors.append("missing password")
+        if account_errors:
+            errors[name] = "; ".join(account_errors)
+    return errors
+
+
+NOTE_ACCOUNT_ERRORS = validate_note_accounts(CONFIG)
+if NOTE_ACCOUNT_ERRORS:
+    for acc, err in NOTE_ACCOUNT_ERRORS.items():
+        print(f"Note config error for {acc}: {err}")
+
+
+def create_note_clients():
+    """Create Note clients for all configured accounts."""
+    clients = {}
+    note_cfg = CONFIG.get("note", {})
+    accounts = note_cfg.get("accounts", {})
+    base_url = note_cfg.get("base_url")
+    for name, info in accounts.items():
+        if name in NOTE_ACCOUNT_ERRORS:
+            continue
+        cfg = {"note": {"username": info.get("username"), "password": info.get("password")}}
+        if base_url:
+            cfg["note"]["base_url"] = base_url
+        try:
+            client = NoteClient(cfg)
+            client.login()
+            clients[name] = client
+        except Exception as exc:
+            print(f"Failed to init Note client for {name}: {exc}")
+    return clients
+
+
+NOTE_CLIENTS = create_note_clients()
 
 
 def validate_twitter_accounts(config: Dict) -> Dict[str, str]:

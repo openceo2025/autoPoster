@@ -1,7 +1,11 @@
 {
   "note": {
-    "username": "your_username",
-    "password": "your_password"
+    "accounts": {
+      "default": {
+        "username": "",
+        "password": ""
+      }
+    }
   },
   "mastodon": {
     "accounts": {
