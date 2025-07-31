@@ -22,6 +22,7 @@ class NoteClient:
         url = f"{self.base_url}/api/v1/sessions/sign_in"
         resp = self.session.post(url, data={"login": username, "password": password})
         self.session.cookies.update(resp.cookies)
+        print(f'Login status: {resp.status_code}, body: {resp.text}')
         if resp.status_code != 200:
             raise NoteAuthError(f"Login failed with status {resp.status_code}")
 
