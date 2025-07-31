@@ -142,6 +142,27 @@ def test_create_note_client_default(monkeypatch):
     assert client.logged_in
 
 
+def test_create_note_client_specific_account(monkeypatch):
+    cfg = {
+        'note': {
+            'base_url': 'http://host',
+            'accounts': {
+                'a1': {'username': 'u1', 'password': 'p1'},
+                'a2': {'username': 'u2', 'password': 'p2'},
+            },
+        }
+    }
+    import services.post_to_note as mod
+    monkeypatch.setattr(mod, 'CONFIG', cfg, raising=False)
+    monkeypatch.setattr(mod, 'NoteClient', DummyNoteClient)
+    client = mod.create_note_client('a2')
+    assert isinstance(client, DummyNoteClient)
+    assert client.cfg['note']['username'] == 'u2'
+    assert client.cfg['note']['password'] == 'p2'
+    assert client.cfg['note']['base_url'] == 'http://host'
+    assert client.logged_in
+
+
 def test_create_note_client_no_accounts(monkeypatch):
     cfg = {'note': {'accounts': {}}}
     import services.post_to_note as mod

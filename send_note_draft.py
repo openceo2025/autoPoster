@@ -13,6 +13,7 @@ def main():
         image_b64 = base64.b64encode(f.read()).decode("utf-8")
 
     payload = {
+        "account": "default",
         "content": CONTENT,
         "images": [image_b64],
     }
