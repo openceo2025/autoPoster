@@ -1,5 +1,10 @@
+import sys
+from pathlib import Path
+
 import requests
 import pytest
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 from note_client import NoteClient, NoteAuthError
 
 class DummySession:
