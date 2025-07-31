@@ -14,14 +14,29 @@ else:
 
 
 def create_note_client() -> NoteClient | None:
-    """Initialize a NoteClient and log in."""
+    """Initialize a NoteClient using the first configured Note account."""
+    note_cfg = CONFIG.get("note", {})
+    accounts = note_cfg.get("accounts") or {}
+    if not accounts:
+        print("No Note accounts configured")
+        return None
+
+    if "default" in accounts:
+        acct = accounts["default"]
+    else:
+        acct = next(iter(accounts.values()))
+
+    cfg = {"note": {"username": acct.get("username"), "password": acct.get("password")}}
+    if note_cfg.get("base_url"):
+        cfg["note"]["base_url"] = note_cfg["base_url"]
+
     try:
-        client = NoteClient(CONFIG)
+        client = NoteClient(cfg)
         client.login()
         return client
     except Exception as exc:
         print(f"Failed to init Note client: {exc}")
-        print(f"CONFIG used for NoteClient: {CONFIG}")
+        print(f"CONFIG used for NoteClient: {cfg}")
         return None
 
 

@@ -110,3 +110,42 @@ def test_create_draft_failure():
     client = NoteClient(cfg, session=session)
     with pytest.raises(RuntimeError):
         client.create_draft('t', 'b')
+
+
+class DummyNoteClient:
+    def __init__(self, cfg, session=None):
+        self.cfg = cfg
+        self.logged_in = False
+
+    def login(self):
+        self.logged_in = True
+
+
+def test_create_note_client_default(monkeypatch):
+    cfg = {
+        'note': {
+            'base_url': 'http://host',
+            'accounts': {
+                'default': {'username': 'u', 'password': 'p'},
+                'other': {'username': 'x', 'password': 'y'},
+            },
+        }
+    }
+    import services.post_to_note as mod
+    monkeypatch.setattr(mod, 'CONFIG', cfg, raising=False)
+    monkeypatch.setattr(mod, 'NoteClient', DummyNoteClient)
+    client = mod.create_note_client()
+    assert isinstance(client, DummyNoteClient)
+    assert client.cfg['note']['username'] == 'u'
+    assert client.cfg['note']['password'] == 'p'
+    assert client.cfg['note']['base_url'] == 'http://host'
+    assert client.logged_in
+
+
+def test_create_note_client_no_accounts(monkeypatch):
+    cfg = {'note': {'accounts': {}}}
+    import services.post_to_note as mod
+    monkeypatch.setattr(mod, 'CONFIG', cfg, raising=False)
+    monkeypatch.setattr(mod, 'NoteClient', DummyNoteClient)
+    client = mod.create_note_client()
+    assert client is None
