@@ -23,7 +23,7 @@ class NoteClient:
         resp = self.session.post(url, data={"login": username, "password": password})
         self.session.cookies.update(resp.cookies)
         print(f'Login status: {resp.status_code}, body: {resp.text}')
-        if resp.status_code != 200:
+        if resp.status_code not in (200, 201):
             raise NoteAuthError(f"Login failed with status {resp.status_code}")
 
     def upload_image(self, path: Path) -> str:
