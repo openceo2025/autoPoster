@@ -1,3 +1,4 @@
+from pathlib import Path
 import requests
 
 class NoteAuthError(Exception):
@@ -23,3 +24,15 @@ class NoteClient:
         self.session.cookies.update(resp.cookies)
         if resp.status_code != 200:
             raise NoteAuthError(f"Login failed with status {resp.status_code}")
+
+    def upload_image(self, path: Path) -> str:
+        """Upload an image and return the CDN URL from the API response."""
+        url = f"{self.base_url}/api/v1/upload_image"
+        try:
+            with path.open("rb") as fh:
+                resp = self.session.post(url, files={"file": fh})
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("url") or data["cdn_url"]
+        except Exception as exc:  # Mimic the simple try/except pattern
+            raise RuntimeError(f"Image upload failed: {exc}") from exc
