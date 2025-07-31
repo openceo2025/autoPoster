@@ -7,6 +7,7 @@ class DummySession:
         self.status_code = status_code
         self.json_data = json_data or {}
         self.post_args = []
+        self.put_args = []
         self.cookies = requests.cookies.RequestsCookieJar()
 
     def post(self, url, data=None, files=None, **kwargs):
@@ -24,6 +25,19 @@ class DummySession:
         resp.json = json_func
         # mimic requests.Session behavior updating cookies
         self.cookies.update(resp.cookies)
+        return resp
+
+    def put(self, url, data=None, **kwargs):
+        self.put_args.append((url, data))
+        resp = type('Resp', (), {})()
+        resp.status_code = self.status_code
+        def raise_for_status():
+            if resp.status_code >= 400:
+                raise requests.HTTPError(resp.status_code)
+        resp.raise_for_status = raise_for_status
+        def json_func():
+            return self.json_data
+        resp.json = json_func
         return resp
 
 def test_login_success():
@@ -63,3 +77,21 @@ def test_upload_image_failure(tmp_path):
     img.write_text('data')
     with pytest.raises(RuntimeError):
         client.upload_image(img)
+
+
+def test_create_draft_success():
+    cfg = {'note': {'base_url': 'http://host'}}
+    session = DummySession(200, json_data={'id': 1, 'key': 'k', 'draft_url': 'u'})
+    client = NoteClient(cfg, session=session)
+    result = client.create_draft('t', '<p>x</p>')
+    assert result == {'note_id': 1, 'note_key': 'k', 'draft_url': 'u'}
+    assert session.post_args[0][0] == 'http://host/api/v1/text_notes'
+    assert session.put_args[0][0] == 'http://host/api/v1/text_notes/1'
+
+
+def test_create_draft_failure():
+    cfg = {'note': {'base_url': 'http://host'}}
+    session = DummySession(500)
+    client = NoteClient(cfg, session=session)
+    with pytest.raises(RuntimeError):
+        client.create_draft('t', 'b')
