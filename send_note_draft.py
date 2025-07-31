@@ -1,4 +1,3 @@
-import base64
 import json
 import requests
 
@@ -8,14 +7,10 @@ IMAGE_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with 
 
 
 def main():
-    # Read the image file and encode as base64
-    with open(IMAGE_PATH, "rb") as f:
-        image_b64 = base64.b64encode(f.read()).decode("utf-8")
-
     payload = {
         "account": "default",
         "content": CONTENT,
-        "images": [image_b64],
+        "images": [IMAGE_PATH],
     }
 
     headers = {"Content-Type": "application/json"}
