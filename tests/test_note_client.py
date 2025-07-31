@@ -21,6 +21,7 @@ class DummySession:
         resp.status_code = self.status_code
         resp.cookies = requests.cookies.RequestsCookieJar()
         resp.cookies.set('sid', 'cookie')
+        resp.text = ''
         def raise_for_status():
             if resp.status_code >= 400:
                 raise requests.HTTPError(resp.status_code)
