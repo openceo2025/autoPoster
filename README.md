@@ -17,22 +17,36 @@ A simple REST API that receives post requests and forwards them to various servi
        }
     }
     ```
-   To configure Twitter accounts, add a `twitter` section with credentials for
-   each account:
+    To configure Twitter accounts, add a `twitter` section with credentials for
+    each account:
 
-   ```json
-   "twitter": {
-       "accounts": {
-           "account1": {
-               "consumer_key": "YOUR_CONSUMER_KEY",
-               "consumer_secret": "YOUR_CONSUMER_SECRET",
-               "access_token": "YOUR_ACCESS_TOKEN",
-               "access_token_secret": "YOUR_ACCESS_TOKEN_SECRET",
-               "bearer_token": "YOUR_BEARER_TOKEN"
-           }
-       }
-   }
-   ```
+    ```json
+    "twitter": {
+        "accounts": {
+            "account1": {
+                "consumer_key": "YOUR_CONSUMER_KEY",
+                "consumer_secret": "YOUR_CONSUMER_SECRET",
+                "access_token": "YOUR_ACCESS_TOKEN",
+                "access_token_secret": "YOUR_ACCESS_TOKEN_SECRET",
+                "bearer_token": "YOUR_BEARER_TOKEN"
+            }
+        }
+    }
+    ```
+    To post drafts to Note, include a `note` section. `base_url` is optional and
+    defaults to `https://note.com`:
+
+    ```json
+    "note": {
+        "accounts": {
+            "default": {
+                "username": "YOUR_NOTE_USERNAME",
+                "password": "YOUR_NOTE_PASSWORD"
+            }
+        },
+        "base_url": "https://note.com"
+    }
+    ```
 2. Install dependencies. The project uses `Mastodon.py`, `requests`, and `tweepy`;
    the test suite relies on `pytest` and `httpx`. Install everything with:
    ```bash
@@ -117,9 +131,29 @@ files that will be uploaded and attached to the tweet. Each account entry in
 Example using `curl`:
 
 ```bash
-curl -X POST http://localhost:8765/twitter/post \
+  curl -X POST http://localhost:8765/twitter/post \
+       -H 'Content-Type: application/json' \
+       -d '{"account": "account1", "text": "Hello Twitter", "media": ["b64"]}'
+  ```
+
+### `POST /note/draft`
+
+Create a draft on your Note account. Send the text in `content` and optionally
+include base64 encoded images in the `images` list.
+
+```json
+{
+  "content": "Hello Note",
+  "images": ["base64image"]
+}
+```
+
+Example using `curl`:
+
+```bash
+curl -X POST http://localhost:8765/note/draft \
      -H 'Content-Type: application/json' \
-     -d '{"account": "account1", "text": "Hello Twitter", "media": ["b64"]}'
+     -d '{"content": "Hello Note", "images": ["b64"]}'
 ```
 
 ## Troubleshooting
