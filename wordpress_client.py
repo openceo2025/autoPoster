@@ -58,14 +58,17 @@ class WordpressClient:
         files = {"media[]": (filename, content)}
         resp: requests.Response | None = None
         try:
+            print(f"POST {url} with {filename}, {len(content)} bytes")
             resp = self.session.post(url, files=files)
             print(resp.status_code, resp.text)
+            print(getattr(resp, "headers", None))
             resp.raise_for_status()
             data = resp.json()
             return {"id": data.get("id"), "url": data.get("source_url") or data.get("link")}
         except Exception as exc:
             if resp is not None:
                 print(resp.status_code, resp.text)
+                print(getattr(resp, "headers", None))
             raise RuntimeError(f"Media upload failed: {exc}") from exc
 
     def create_post(self, title: str, html: str, featured_id: int | None = None) -> dict:
