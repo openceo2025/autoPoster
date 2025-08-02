@@ -25,5 +25,16 @@
         "bearer_token": "YOUR_BEARER_TOKEN"
       }
     }
+  },
+  "wordpress": {
+    "accounts": {
+      "account1": {
+        "site": "https://wordpress.example",
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET",
+        "username": "YOUR_USERNAME",
+        "password": "YOUR_PASSWORD"
+      }
+    }
   }
 }
