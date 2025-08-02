@@ -35,6 +35,7 @@ class WordpressClient:
             "client_secret": self.client_secret,
             "username": self.username,
             "password": self.password,
+            "scope": "global",
         }
         try:
             resp = self.session.post(self.TOKEN_URL, data=data)
