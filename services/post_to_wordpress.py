@@ -65,10 +65,13 @@ def post_to_wordpress(
         if not img.exists():
             return {"error": f"Image file not found: {img}"}
         try:
+            print(f"Uploading {img} ({img.stat().st_size} bytes)")
             with img.open("rb") as fh:
                 uploaded = client.upload_media(fh.read(), img.name)
+            print(f"Uploaded {img} -> {uploaded}")
         except Exception as exc:
-            return {"error": f"Image upload failed: {exc}"}
+            print(f"Failed image {img}: {exc}")
+            raise
         url = uploaded.get("url")
         body += f'<img src="{url}" />'
         if featured_id is None:
