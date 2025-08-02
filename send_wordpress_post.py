@@ -3,10 +3,10 @@ import json
 import requests
 
 URL = "http://localhost:8765/wordpress/post"
-ACCOUNT = "account1"  # must match an entry in config.json
+ACCOUNT = "nicchi"  # must match an entry in config.json
 TITLE = "これはWordPressへの自動投稿テストです"
 CONTENT = "自動投稿された記事の本文です"
-MEDIA_PATH = "/path/to/image.png"  # replace with an actual file path
+MEDIA_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with an actual file path
 
 
 def main():
