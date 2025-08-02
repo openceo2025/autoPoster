@@ -9,7 +9,7 @@ class WordpressClient:
     """Simple client for WordPress.com API."""
 
     TOKEN_URL = "https://public-api.wordpress.com/oauth2/token"
-    API_BASE = "https://public-api.wordpress.com/wp/v2/sites/{site}"
+    API_BASE = "https://public-api.wordpress.com/rest/v1.1/sites/{site}"
 
     def __init__(self, config: dict, session: requests.Session | None = None):
         self.config = config or {}
@@ -50,7 +50,7 @@ class WordpressClient:
     def upload_media(self, content: bytes, filename: str) -> dict:
         """Upload media bytes and return media ID and URL."""
         url = f"{self.API_BASE.format(site=self.site)}/media/new"
-        files = {"file": (filename, content)}
+        files = {"media[]": (filename, content)}
         try:
             resp = self.session.post(url, files=files)
             resp.raise_for_status()
@@ -64,7 +64,7 @@ class WordpressClient:
         url = f"{self.API_BASE.format(site=self.site)}/posts/new"
         payload = {"title": title, "content": html, "status": "publish"}
         if featured_id:
-            payload["featured_media"] = featured_id
+            payload["featured_image"] = featured_id
         try:
             resp = self.session.post(url, json=payload)
             resp.raise_for_status()

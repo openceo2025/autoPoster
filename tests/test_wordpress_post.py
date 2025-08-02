@@ -31,7 +31,7 @@ def make_client(monkeypatch, config):
         if url.endswith("oauth2/token"):
             return DummyResponse({"access_token": "tok"})
         if url.endswith("/media/new"):
-            calls["uploads"].append(kwargs["files"]["file"])
+            calls["uploads"].append(kwargs["files"]["media[]"])
             return DummyResponse({"id": 1, "source_url": "http://img"})
         if url.endswith("/posts/new"):
             calls["post"] = kwargs.get("json")
@@ -84,7 +84,7 @@ def test_wordpress_post_success(monkeypatch):
     filename, content = calls["uploads"][0]
     assert content == data
     payload = calls["post"]
-    assert payload["featured_media"] == 1
+    assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
     assert payload["title"] == "T"
 
