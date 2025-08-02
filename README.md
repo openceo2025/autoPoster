@@ -37,16 +37,48 @@ A simple REST API that receives post requests and forwards them to various servi
     defaults to `https://note.com`:
 
     ```json
-    "note": {
-        "accounts": {
-            "default": {
-                "username": "YOUR_NOTE_USERNAME",
-                "password": "YOUR_NOTE_PASSWORD"
-            }
-        },
-        "base_url": "https://note.com"
-    }
-    ```
+      "note": {
+          "accounts": {
+              "default": {
+                  "username": "YOUR_NOTE_USERNAME",
+                  "password": "YOUR_NOTE_PASSWORD"
+              }
+          },
+          "base_url": "https://note.com"
+      }
+      ```
+
+     To publish to WordPress.com, include a `wordpress` section with account and
+     OAuth2 credentials. `site` should be your WordPress.com domain or numeric
+     site ID. Register an application at
+     <https://developer.wordpress.com/apps/> to obtain `client_id` and
+     `client_secret`, and enable the **password** grant type. The server will
+     use the provided `username` and `password` to request an access token when
+     posting.
+
+     ```json
+     "wordpress": {
+         "accounts": {
+             "account1": {
+                 "site": "your-site.wordpress.com",
+                 "client_id": "YOUR_CLIENT_ID",
+                 "client_secret": "YOUR_CLIENT_SECRET",
+                 "username": "YOUR_USERNAME",
+                 "password": "YOUR_PASSWORD"
+             }
+         }
+     }
+     ```
+
+     OAuth2 setup:
+
+     1. Visit <https://developer.wordpress.com/apps/> and create a new
+        application.
+     2. Enable the **password** grant type and note the provided `client_id` and
+        `client_secret`.
+     3. Fill those values along with your WordPress.com `username` and
+        `password` in `config.json`. The server exchanges these for an access
+        token via `https://public-api.wordpress.com/oauth2/token` when posting.
 2. Install dependencies. The project uses `Mastodon.py`, `requests`, and `tweepy`;
    the test suite relies on `pytest` and `httpx`. Install everything with:
    ```bash
@@ -130,11 +162,37 @@ files that will be uploaded and attached to the tweet. Each account entry in
 
 Example using `curl`:
 
-```bash
-  curl -X POST http://localhost:8765/twitter/post \
-       -H 'Content-Type: application/json' \
-       -d '{"account": "account1", "text": "Hello Twitter", "media": ["b64"]}'
+  ```bash
+    curl -X POST http://localhost:8765/twitter/post \
+         -H 'Content-Type: application/json' \
+         -d '{"account": "account1", "text": "Hello Twitter", "media": ["b64"]}'
   ```
+
+### `POST /wordpress/post`
+
+Create and publish a post on WordPress.com. The JSON body must specify the
+target `account` (matching `wordpress.accounts` in `config.json`), a `title`,
+and `content`. Optionally include `media`, a list of base64‑encoded images. Each
+image is uploaded and inserted into the post body; the first uploaded image is
+also set as the featured image (アイキャッチ). Ensure your files are within
+WordPress's upload limits and in supported formats such as PNG or JPEG.
+
+```json
+{
+  "account": "account1",
+  "title": "Hello WP",
+  "content": "Article body",
+  "media": ["base64image"]
+}
+```
+
+Example using `curl`:
+
+```bash
+curl -X POST http://localhost:8765/wordpress/post \
+     -H 'Content-Type: application/json' \
+     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "media": ["b64"]}'
+```
 
 ### `POST /note/draft`
 
