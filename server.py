@@ -7,7 +7,11 @@ from io import BytesIO
 from mastodon import Mastodon
 import tweepy
 from note_client import NoteClient
+from wordpress_client import WordpressClient
 from services.post_to_note import post_to_note
+from services.post_to_wordpress import post_to_wordpress as service_post_to_wordpress
+import os
+import tempfile
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -198,6 +202,68 @@ def create_twitter_clients():
 
 TWITTER_CLIENTS = create_twitter_clients()
 
+
+def validate_wordpress_accounts(config: Dict) -> Dict[str, str]:
+    """Validate WordPress account configuration and return a map of errors."""
+    errors: Dict[str, str] = {}
+    accounts = config.get("wordpress", {}).get("accounts")
+    if not accounts:
+        errors["_general"] = "wordpress.accounts section missing or empty"
+        return errors
+
+    placeholders = {
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET",
+        "username": "YOUR_USERNAME",
+        "password": "YOUR_PASSWORD",
+    }
+
+    for name, info in accounts.items():
+        account_errors = []
+        site = info.get("site")
+        if not site:
+            account_errors.append("missing site")
+        elif "wordpress.example" in site:
+            account_errors.append("site looks like a placeholder")
+
+        for key, placeholder in placeholders.items():
+            val = info.get(key)
+            if not val:
+                account_errors.append(f"missing {key}")
+            elif val == placeholder:
+                account_errors.append(f"{key} looks like a placeholder")
+
+        if account_errors:
+            errors[name] = "; ".join(account_errors)
+
+    return errors
+
+
+WORDPRESS_ACCOUNT_ERRORS = validate_wordpress_accounts(CONFIG)
+if WORDPRESS_ACCOUNT_ERRORS:
+    for acc, err in WORDPRESS_ACCOUNT_ERRORS.items():
+        print(f"WordPress config error for {acc}: {err}")
+
+
+def create_wordpress_clients():
+    """Create WordPress clients for all configured accounts."""
+    clients = {}
+    accounts = CONFIG.get("wordpress", {}).get("accounts", {})
+    for name, info in accounts.items():
+        if name in WORDPRESS_ACCOUNT_ERRORS:
+            continue
+        cfg = {"wordpress": {"accounts": {"default": info}}}
+        try:
+            client = WordpressClient(cfg)
+            client.authenticate()
+            clients[name] = client
+        except Exception as exc:
+            print(f"Failed to init WordPress client for {name}: {exc}")
+    return clients
+
+
+WORDPRESS_CLIENTS = create_wordpress_clients()
+
 class PostRequest(BaseModel):
     text: str
     media: Optional[List[str]] = None  # base64 encoded strings
@@ -219,6 +285,13 @@ class NotePostRequest(BaseModel):
     account: str
     content: str
     images: Optional[List[str]] = None
+
+
+class WordpressPostRequest(BaseModel):
+    account: str
+    title: str
+    content: str
+    media: Optional[List[str]] = None
 
 
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
@@ -275,6 +348,45 @@ def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
 
     return {"posted": True}
 
+
+def post_to_wordpress(
+    account: str,
+    title: str,
+    content: str,
+    media: Optional[List[str]] = None,
+):
+    if account in WORDPRESS_ACCOUNT_ERRORS:
+        return {"error": "Account misconfigured"}
+    client = WORDPRESS_CLIENTS.get(account)
+    if not client:
+        return {"error": "Account not configured"}
+
+    paths = []
+    if media:
+        for item in media:
+            try:
+                data = base64.b64decode(item)
+                tmp = tempfile.NamedTemporaryFile(delete=False)
+                tmp.write(data)
+                tmp.flush()
+                tmp.close()
+                paths.append(Path(tmp.name))
+            except Exception as exc:
+                for p in paths:
+                    try:
+                        os.unlink(p)
+                    except Exception:
+                        pass
+                return {"error": f"Media upload failed: {exc}"}
+
+    result = service_post_to_wordpress(title, content, paths, account)
+    for p in paths:
+        try:
+            os.unlink(p)
+        except Exception:
+            pass
+    return result
+
 @app.get("/")
 async def root():
     return {"status": "ok"}
@@ -294,6 +406,13 @@ async def mastodon_post(data: MastodonPostRequest):
 @app.post("/twitter/post")
 async def twitter_post(data: TwitterPostRequest):
     return post_to_twitter(data.account, data.text, data.media)
+
+
+@app.post("/wordpress/post")
+async def wordpress_post(data: WordpressPostRequest):
+    return post_to_wordpress(
+        data.account, data.title, data.content, data.media
+    )
 
 
 @app.post("/note/draft")
