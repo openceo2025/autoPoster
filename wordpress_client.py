@@ -37,8 +37,10 @@ class WordpressClient:
             "password": self.password,
             "scope": "global",
         }
+        resp: requests.Response | None = None
         try:
             resp = self.session.post(self.TOKEN_URL, data=data)
+            print(resp.status_code, resp.text)
             resp.raise_for_status()
             token = resp.json().get("access_token")
             if not token:
@@ -46,18 +48,24 @@ class WordpressClient:
             self.access_token = token
             self.session.headers.update({"Authorization": f"Bearer {token}"})
         except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
             raise WordpressAuthError(f"Authentication failed: {exc}") from exc
 
     def upload_media(self, content: bytes, filename: str) -> dict:
         """Upload media bytes and return media ID and URL."""
         url = f"{self.API_BASE.format(site=self.site)}/media/new"
         files = {"media[]": (filename, content)}
+        resp: requests.Response | None = None
         try:
             resp = self.session.post(url, files=files)
+            print(resp.status_code, resp.text)
             resp.raise_for_status()
             data = resp.json()
             return {"id": data.get("id"), "url": data.get("source_url") or data.get("link")}
         except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
             raise RuntimeError(f"Media upload failed: {exc}") from exc
 
     def create_post(self, title: str, html: str, featured_id: int | None = None) -> dict:
@@ -66,9 +74,13 @@ class WordpressClient:
         payload = {"title": title, "content": html, "status": "publish"}
         if featured_id:
             payload["featured_image"] = featured_id
+        resp: requests.Response | None = None
         try:
             resp = self.session.post(url, json=payload)
+            print(resp.status_code, resp.text)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
             raise RuntimeError(f"Post creation failed: {exc}") from exc
