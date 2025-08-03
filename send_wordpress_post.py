@@ -9,6 +9,9 @@ ACCOUNT = "nicchi"  # must match an entry in config.json
 TITLE = "これはWordPressへの自動投稿テストです"
 CONTENT = "自動投稿された記事の本文です"
 MEDIA_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with an actual file path
+# Text visible only to paid subscribers. Replace with your own text or set to
+# ``None`` to omit the paid block entirely.
+PAID_CONTENT = "ここから先は有料会員限定です"
 
 
 def main():
@@ -26,6 +29,9 @@ def main():
                 "data": media_b64,
             }
         ],
+        # Remove this key or set ``PAID_CONTENT`` to ``None`` if you do not want
+        # to include a premium content block in the post.
+        "paid_content": PAID_CONTENT,
     }
 
     headers = {"Content-Type": "application/json"}
