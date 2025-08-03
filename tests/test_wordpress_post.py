@@ -94,7 +94,9 @@ def test_wordpress_post_success(monkeypatch):
     assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
     assert payload["title"] == "T"
-    assert payload["paid_content"] == "<p>Paid</p>"
+    assert "wp:premium-content/paid-block" in payload["content"]
+    assert "<p>Paid</p>" in payload["content"]
+    assert "paid_content" not in payload
 
 
 def test_wordpress_post_misconfigured(monkeypatch):

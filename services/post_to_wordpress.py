@@ -61,7 +61,6 @@ def post_to_wordpress(
         return {"error": "WordPress client unavailable"}
 
     body = f"<p>{content}</p>"
-    paid_body = f"<p>{paid_content}</p>" if paid_content else None
     featured_id = None
     for img_path, filename in images:
         if not img_path.exists():
@@ -85,10 +84,15 @@ def post_to_wordpress(
         if featured_id is None:
             featured_id = uploaded.get("id")
 
-    try:
-        post_info = client.create_post(
-            title, body, featured_id, paid_body
+    if paid_content:
+        body += (
+            "<!-- wp:premium-content/paid-block -->"
+            f"<p>{paid_content}</p>"
+            "<!-- /wp:premium-content/paid-block -->"
         )
+
+    try:
+        post_info = client.create_post(title, body, featured_id)
     except Exception as exc:
         return {"error": str(exc)}
 

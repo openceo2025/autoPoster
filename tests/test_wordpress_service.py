@@ -76,4 +76,7 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert '<img src="http://img2" alt="x2" />' in dummy.created["html"]
     # First image used as featured
     assert dummy.created["featured_id"] == 1
-    assert dummy.created["paid_content"] == "<p>Paid</p>"
+    # Paid content added as block in HTML and not sent separately
+    assert "wp:premium-content/paid-block" in dummy.created["html"]
+    assert "<p>Paid</p>" in dummy.created["html"]
+    assert dummy.created["paid_content"] is None
