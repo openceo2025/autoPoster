@@ -74,10 +74,17 @@ def post_to_wordpress(
         except Exception as exc:
             print(f"Failed image {img_path}: {exc}")
             raise
-        url = uploaded.get("url")
-        body += f'<img src="{url}" />'
+        media = uploaded.get("media")
+        url = uploaded.get("url") or uploaded.get("source_url")
+        if not url and media:
+            url = media.get("URL") or media.get("source_url")
+        if not url:
+            return {"error": "Media upload returned no URL"}
+        body += f'<img src="{url}" alt="{filename}" />'
         if featured_id is None:
             featured_id = uploaded.get("id")
+            if featured_id is None and media:
+                featured_id = media.get("ID")
 
     try:
         post_info = client.create_post(title, body, featured_id)
