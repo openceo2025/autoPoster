@@ -60,12 +60,15 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     img2.write_bytes(b"456")
 
     resp = wp_service.post_to_wordpress(
-        "Title", "Body", [img1, img2], account="acc"
+        "Title",
+        "Body",
+        [(img1, "x1.jpg"), (img2, "x2.jpg")],
+        account="acc",
     )
     assert resp == {"id": 10, "link": "http://post"}
     # Uploaded both images
-    assert dummy.uploaded[0][0] == "a.jpg"
-    assert dummy.uploaded[1][0] == "b.jpg"
+    assert dummy.uploaded[0][0] == "x1.jpg"
+    assert dummy.uploaded[1][0] == "x2.jpg"
     # HTML contains image tags
     assert '<img src="http://img1" />' in dummy.created["html"]
     assert '<img src="http://img2" />' in dummy.created["html"]

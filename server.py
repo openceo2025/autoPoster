@@ -287,11 +287,16 @@ class NotePostRequest(BaseModel):
     images: Optional[List[str]] = None
 
 
+class WordpressMediaItem(BaseModel):
+    filename: str
+    data: str
+
+
 class WordpressPostRequest(BaseModel):
     account: str
     title: str
     content: str
-    media: Optional[List[str]] = None
+    media: Optional[List[WordpressMediaItem]] = None
 
 
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
@@ -353,7 +358,7 @@ def post_to_wordpress(
     account: str,
     title: str,
     content: str,
-    media: Optional[List[str]] = None,
+    media: Optional[List[WordpressMediaItem]] = None,
 ):
     if account in WORDPRESS_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
@@ -361,26 +366,28 @@ def post_to_wordpress(
     if not client:
         return {"error": "Account not configured"}
 
-    paths = []
+    images: List[tuple[Path, str]] = []
     if media:
         for item in media:
             try:
-                data = base64.b64decode(item)
-                tmp = tempfile.NamedTemporaryFile(delete=False)
+                data = base64.b64decode(item.data)
+                tmp = tempfile.NamedTemporaryFile(
+                    delete=False, suffix=Path(item.filename).suffix
+                )
                 tmp.write(data)
                 tmp.flush()
                 tmp.close()
-                paths.append(Path(tmp.name))
+                images.append((Path(tmp.name), item.filename))
             except Exception as exc:
-                for p in paths:
+                for p, _ in images:
                     try:
                         os.unlink(p)
                     except Exception:
                         pass
                 return {"error": f"Media upload failed: {exc}"}
 
-    result = service_post_to_wordpress(title, content, paths, account)
-    for p in paths:
+    result = service_post_to_wordpress(title, content, images, account)
+    for p, _ in images:
         try:
             os.unlink(p)
         except Exception:

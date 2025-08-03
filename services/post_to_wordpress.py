@@ -50,7 +50,7 @@ WP_CLIENT = create_wp_client()
 def post_to_wordpress(
     title: str,
     content: str,
-    images: List[Path] = [],
+    images: List[tuple[Path, str]] = [],
     account: str | None = None,
 ) -> dict:
     """Create a WordPress post with optional images."""
@@ -61,16 +61,18 @@ def post_to_wordpress(
 
     body = f"<p>{content}</p>"
     featured_id = None
-    for img in images:
-        if not img.exists():
-            return {"error": f"Image file not found: {img}"}
+    for img_path, filename in images:
+        if not img_path.exists():
+            return {"error": f"Image file not found: {img_path}"}
         try:
-            print(f"Uploading {img} ({img.stat().st_size} bytes)")
-            with img.open("rb") as fh:
-                uploaded = client.upload_media(fh.read(), img.name)
-            print(f"Uploaded {img} -> {uploaded}")
+            print(
+                f"Uploading {img_path} ({img_path.stat().st_size} bytes) as {filename}"
+            )
+            with img_path.open("rb") as fh:
+                uploaded = client.upload_media(fh.read(), filename)
+            print(f"Uploaded {img_path} -> {uploaded}")
         except Exception as exc:
-            print(f"Failed image {img}: {exc}")
+            print(f"Failed image {img_path}: {exc}")
             raise
         url = uploaded.get("url")
         body += f'<img src="{url}" />'
