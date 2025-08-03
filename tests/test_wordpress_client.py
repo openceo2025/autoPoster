@@ -35,6 +35,17 @@ def test_upload_media_uses_media(monkeypatch):
     assert res == {"id": 1, "url": "http://example/img.jpg"}
 
 
+def test_upload_media_source_url(monkeypatch):
+    client = _make_client()
+
+    def fake_post(url, files):
+        return DummyResp({"media": [{"id": 3, "source_url": "http://example/img2.jpg"}]})
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    res = client.upload_media(b"data", "b.jpg")
+    assert res == {"id": 3, "url": "http://example/img2.jpg"}
+
+
 def test_upload_media_fallback_link(monkeypatch):
     client = _make_client()
 
