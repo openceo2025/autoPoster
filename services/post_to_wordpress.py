@@ -53,23 +53,23 @@ def build_paid_block(
     paid_message: str | None,
     paid_body: str,
 ) -> str:
-    """Return HTML for a WordPress premium content block."""
+    """Return HTML for a WordPress subscribers-only block."""
     # Ensure attributes have default values
     plan_id = plan_id or ""
     paid_title = paid_title or ""
     paid_message = paid_message or ""
 
     attrs = {
-        "planIds": [plan_id],
+        "planId": plan_id,
         "title": paid_title,
         "message": paid_message,
     }
     attr_json = json.dumps(attrs, ensure_ascii=False)
-    block = f"<!-- wp:premium-content/paid-block {attr_json} -->"
+    block = f"<!-- wp:jetpack/subscribers-only-content {attr_json} -->"
     if paid_title:
         block += f"<h2>{paid_title}</h2>"
     block += f"<p>{paid_body}</p>"
-    block += "<!-- /wp:premium-content/paid-block -->"
+    block += "<!-- /wp:jetpack/subscribers-only-content -->"
     return block
 
 

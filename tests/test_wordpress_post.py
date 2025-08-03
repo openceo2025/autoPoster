@@ -97,12 +97,12 @@ def test_wordpress_post_success(monkeypatch):
     assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
     assert payload["title"] == "T"
-    assert "wp:premium-content/paid-block" in payload["content"]
+    assert "wp:jetpack/subscribers-only-content" in payload["content"]
     assert "<h2>PT</h2>" in payload["content"]
     assert "<p>Paid</p>" in payload["content"]
     assert '"message": "Msg"' in payload["content"]
     assert '"title": "PT"' in payload["content"]
-    assert '"planIds": ["p1"]' in payload["content"]
+    assert '"planId": "p1"' in payload["content"]
     assert "paid_content" not in payload
 
 
@@ -136,12 +136,12 @@ def test_wordpress_post_paid_block(monkeypatch):
     assert resp.status_code == 200
     payload = calls["post"]
     assert payload["title"] == "T"
-    assert "wp:premium-content/paid-block" in payload["content"]
+    assert "wp:jetpack/subscribers-only-content" in payload["content"]
     assert "<h2>Hidden</h2>" in payload["content"]
     assert "<p>Secret</p>" in payload["content"]
     assert '"message": "M"' in payload["content"]
     assert '"title": "Hidden"' in payload["content"]
-    assert '"planIds": ["cfg"]' in payload["content"]
+    assert '"planId": "cfg"' in payload["content"]
     assert "paid_content" not in payload
 
 

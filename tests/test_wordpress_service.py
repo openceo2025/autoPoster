@@ -85,13 +85,13 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert '<img src="http://img2" alt="x2" />' in dummy.created["html"]
     # First image used as featured
     assert dummy.created["featured_id"] == 1
-    # Paid content added as block in HTML and not sent separately
-    assert "wp:premium-content/paid-block" in dummy.created["html"]
+    # Paid content added as subscribers-only block in HTML and not sent separately
+    assert "wp:jetpack/subscribers-only-content" in dummy.created["html"]
     assert "<h2>PTitle</h2>" in dummy.created["html"]
     assert "<p>Paid</p>" in dummy.created["html"]
     assert '"message": "Msg"' in dummy.created["html"]
     assert '"title": "PTitle"' in dummy.created["html"]
-    assert '"planIds": ["p1"]' in dummy.created["html"]
+    assert '"planId": "p1"' in dummy.created["html"]
     assert dummy.created["paid_content"] is None
 
 
@@ -109,11 +109,11 @@ def test_post_to_wordpress_adds_paid_block(monkeypatch):
         paid_message="M",
     )
     assert resp == {"id": 10, "link": "http://post"}
-    assert "wp:premium-content/paid-block" in dummy.created["html"]
+    assert "wp:jetpack/subscribers-only-content" in dummy.created["html"]
     assert "<h2>Hidden</h2>" in dummy.created["html"]
     assert "<p>Secret</p>" in dummy.created["html"]
     assert '"message": "M"' in dummy.created["html"]
     assert '"title": "Hidden"' in dummy.created["html"]
     # plan_id defaults to client's plan_id when not provided
-    assert '"planIds": ["cfg"]' in dummy.created["html"]
+    assert '"planId": "cfg"' in dummy.created["html"]
     assert dummy.created["paid_content"] is None
