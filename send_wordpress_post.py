@@ -12,6 +12,15 @@ MEDIA_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with 
 # Text visible only to paid subscribers. Replace with your own text or set to
 # ``None`` to omit the paid block entirely.
 PAID_CONTENT = "ここから先は有料会員限定です"
+# Heading displayed above the premium content block. Set to ``None`` to omit
+# the heading entirely.
+PAID_TITLE = "有料会員限定"
+# Message shown to visitors without access. Set to ``None`` to use the
+# WordPress default message.
+PAID_MESSAGE = "購読すると続きを閲覧できます"
+# Subscription plan that grants access to the paid block. Set to ``None`` to
+# use the plan configured for the WordPress account.
+PLAN_ID = "plan_basic"
 
 
 def main():
@@ -32,6 +41,16 @@ def main():
         # Remove this key or set ``PAID_CONTENT`` to ``None`` if you do not want
         # to include a premium content block in the post.
         "paid_content": PAID_CONTENT,
+        # Heading for the premium block; set ``PAID_TITLE`` to ``None`` or remove
+        # this key to omit the heading entirely.
+        "paid_title": PAID_TITLE,
+        # Message shown to visitors without access; set ``PAID_MESSAGE`` to
+        # ``None`` or remove the key to use WordPress's default message.
+        "paid_message": PAID_MESSAGE,
+        # Identifier of the subscription plan that unlocks the premium block;
+        # set ``PLAN_ID`` to ``None`` or remove the key to use the plan
+        # configured for the WordPress account.
+        "plan_id": PLAN_ID,
     }
 
     headers = {"Content-Type": "application/json"}
