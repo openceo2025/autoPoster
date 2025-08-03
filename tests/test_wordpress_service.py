@@ -11,6 +11,12 @@ class DummyClient:
         self.authenticated = False
         self.uploaded = []
         self.created = None
+        info = (
+            config.get("wordpress", {})
+            .get("accounts", {})
+            .get("default", {})
+        )
+        self.plan_id = info.get("plan_id")
 
     def authenticate(self):
         self.authenticated = True
@@ -36,8 +42,8 @@ def test_create_wp_client_select_account(monkeypatch):
     wp_service.CONFIG = {
         "wordpress": {
             "accounts": {
-                "acc1": {"site": "s1"},
-                "acc2": {"site": "s2"},
+                "acc1": {"site": "s1", "plan_id": "p1"},
+                "acc2": {"site": "s2", "plan_id": "p2"},
             }
         }
     }
@@ -46,9 +52,9 @@ def test_create_wp_client_select_account(monkeypatch):
     assert client.authenticated is True
     # Ensure the correct account was used as default
     assert (
-        client.config["wordpress"]["accounts"]["default"]["site"]
-        == "s2"
+        client.config["wordpress"]["accounts"]["default"]["site"] == "s2"
     )
+    assert client.plan_id == "p2"
 
 
 def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):

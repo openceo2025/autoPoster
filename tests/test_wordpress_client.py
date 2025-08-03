@@ -55,3 +55,13 @@ def test_upload_media_fallback_link(monkeypatch):
     monkeypatch.setattr(client.session, "post", fake_post)
     res = client.upload_media(b"x", "a.jpg")
     assert res == {"id": 2, "url": "http://page"}
+
+
+def test_plan_id_from_config():
+    client = WordpressClient({"wordpress": {"site": "s", "plan_id": "p1"}})
+    assert client.plan_id == "p1"
+
+
+def test_plan_id_default_none():
+    client = WordpressClient({"wordpress": {"site": "s"}})
+    assert client.plan_id is None

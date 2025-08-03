@@ -59,16 +59,17 @@ A simple REST API that receives post requests and forwards them to various servi
      ```json
      "wordpress": {
          "accounts": {
-             "account1": {
-                 "site": "your-site.wordpress.com",
-                 "client_id": "YOUR_CLIENT_ID",
-                 "client_secret": "YOUR_CLIENT_SECRET",
-                 "username": "YOUR_USERNAME",
-                 "password": "YOUR_PASSWORD"
-             }
-         }
-     }
-     ```
+            "account1": {
+                "site": "your-site.wordpress.com",
+                "client_id": "YOUR_CLIENT_ID",
+                "client_secret": "YOUR_CLIENT_SECRET",
+                "username": "YOUR_USERNAME",
+                "password": "YOUR_PASSWORD",
+                "plan_id": null
+            }
+        }
+    }
+    ```
 
      OAuth2 setup:
 
@@ -77,8 +78,10 @@ A simple REST API that receives post requests and forwards them to various servi
      2. Enable the **password** grant type and note the provided `client_id` and
         `client_secret`.
      3. Fill those values along with your WordPress.com `username` and
-        `password` in `config.json`. The server exchanges these for an access
-        token via `https://public-api.wordpress.com/oauth2/token` when posting.
+        `password` in `config.json`. Include `plan_id` if you want to restrict
+        Premium Content to a specific membership plan. The server exchanges
+        these for an access token via
+        `https://public-api.wordpress.com/oauth2/token` when posting.
 2. Install dependencies. The project uses `Mastodon.py`, `requests`, and `tweepy`;
    the test suite relies on `pytest` and `httpx`. Install everything with:
    ```bash
