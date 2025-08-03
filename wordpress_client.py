@@ -1,3 +1,4 @@
+import mimetypes
 import requests
 
 
@@ -55,7 +56,8 @@ class WordpressClient:
     def upload_media(self, content: bytes, filename: str) -> dict:
         """Upload media bytes and return media ID and URL."""
         url = f"{self.API_BASE.format(site=self.site)}/media/new"
-        files = {"media[]": (filename, content)}
+        mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        files = {"media[]": (filename, content, mime)}
         resp: requests.Response | None = None
         try:
             print(f"POST {url} with {filename}, {len(content)} bytes")
@@ -64,7 +66,11 @@ class WordpressClient:
             print(getattr(resp, "headers", None))
             resp.raise_for_status()
             data = resp.json()
-            return {"id": data.get("id"), "url": data.get("source_url") or data.get("link")}
+            media = data.get("media", data)
+            media_url = media.get("source_url") or media.get("URL")
+            if not media_url:
+                raise RuntimeError(f"Media URL missing in response: {data}")
+            return {"id": media.get("ID"), "url": media_url}
         except Exception as exc:
             if resp is not None:
                 print(resp.status_code, resp.text)
