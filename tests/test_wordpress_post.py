@@ -1,6 +1,5 @@
 import base64
 import json
-import mimetypes
 
 import pytest
 from fastapi.testclient import TestClient
@@ -33,7 +32,7 @@ def make_client(monkeypatch, config):
             return DummyResponse({"access_token": "tok"})
         if url.endswith("/media/new"):
             calls["uploads"].append(kwargs["files"]["media[]"])
-            return DummyResponse({"media": {"ID": 1, "source_url": "http://img"}})
+            return DummyResponse({"id": 1, "source_url": "http://img"})
         if url.endswith("/posts/new"):
             calls["post"] = kwargs.get("json")
             return DummyResponse({"id": 10, "link": "http://post"})
@@ -87,10 +86,9 @@ def test_wordpress_post_success(monkeypatch):
     assert resp.status_code == 200
     assert resp.json() == {"id": 10, "link": "http://post"}
     assert len(calls["uploads"]) == 1
-    filename, content, mime = calls["uploads"][0]
+    filename, content = calls["uploads"][0]
     assert filename == "img.png"
     assert content == data
-    assert mime == mimetypes.guess_type("img.png")[0]
     payload = calls["post"]
     assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
