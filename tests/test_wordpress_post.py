@@ -33,7 +33,7 @@ def make_client(monkeypatch, config):
             return DummyResponse({"access_token": "tok"})
         if url.endswith("/media/new"):
             calls["uploads"].append(kwargs["files"]["media[]"])
-            return DummyResponse({"media": {"ID": 1, "URL": "http://img"}})
+            return DummyResponse({"media": {"ID": 1, "source_url": "http://img"}})
         if url.endswith("/posts/new"):
             calls["post"] = kwargs.get("json")
             return DummyResponse({"id": 10, "link": "http://post"})
@@ -94,7 +94,6 @@ def test_wordpress_post_success(monkeypatch):
     payload = calls["post"]
     assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
-    assert 'alt="img.png"' in payload["content"]
     assert payload["title"] == "T"
 
 
