@@ -198,18 +198,30 @@ curl -X POST http://localhost:8765/wordpress/post \
 ```
 
 #### Premium content (`paid_content`)
-
 Use the optional `paid_content` field to insert a Premium Content block that is
 visible only to paying subscribers. This feature requires a WordPress.com plan
-that supports the Premium Content block (for example, the Creator or Commerce
-plan). Include the text for subscribers in the `paid_content` field:
+that supports the Premium Content block (for example, the **Creator** or
+**Commerce** plan). To limit the block to a specific membership plan, supply the
+`plan_id`. You can retrieve available plan IDs with an authenticated request:
+
+```bash
+curl -H "Authorization: Bearer <TOKEN>" \
+     https://public-api.wordpress.com/wpcom/v2/sites/<site>/plans
+```
+
+Use the `id` field from the response (e.g. `"plan_basic"`) as the `plan_id` in
+your request. You can also customize the block's heading and upsell message with
+`paid_title` and `paid_message`.
 
 ```json
 {
   "account": "account1",
   "title": "Hello WP",
   "content": "Article body",
-  "paid_content": "Subscriber only text"
+  "paid_content": "Subscriber only text",
+  "paid_title": "Members only",
+  "paid_message": "Subscribe to continue",
+  "plan_id": "plan_basic"
 }
 ```
 
@@ -218,8 +230,21 @@ Example using `curl`:
 ```bash
 curl -X POST http://localhost:8765/wordpress/post \
      -H 'Content-Type: application/json' \
-     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "paid_content": "Subscriber only text"}'
+     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "paid_content": "Subscriber only text", "paid_title": "Members only", "paid_message": "Subscribe to continue", "plan_id": "plan_basic"}'
 ```
+
+Sample response:
+
+```json
+{
+  "id": 10,
+  "link": "http://post"
+}
+```
+
+If the site does not have a plan that supports Premium Content, WordPress.com
+returns an error and the API responds with a message such as `{"error":
+"Paid content block requires an upgrade"}` and the post is not published.
 
 ### `POST /note/draft`
 
