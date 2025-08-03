@@ -90,7 +90,8 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert "<h2>PTitle</h2>" in dummy.created["html"]
     assert "<p>Paid</p>" in dummy.created["html"]
     assert '"message": "Msg"' in dummy.created["html"]
-    assert '"planId": "p1"' in dummy.created["html"]
+    assert '"title": "PTitle"' in dummy.created["html"]
+    assert '"planIds": ["p1"]' in dummy.created["html"]
     assert dummy.created["paid_content"] is None
 
 
@@ -112,6 +113,7 @@ def test_post_to_wordpress_adds_paid_block(monkeypatch):
     assert "<h2>Hidden</h2>" in dummy.created["html"]
     assert "<p>Secret</p>" in dummy.created["html"]
     assert '"message": "M"' in dummy.created["html"]
+    assert '"title": "Hidden"' in dummy.created["html"]
     # plan_id defaults to client's plan_id when not provided
-    assert '"planId": "cfg"' in dummy.created["html"]
+    assert '"planIds": ["cfg"]' in dummy.created["html"]
     assert dummy.created["paid_content"] is None

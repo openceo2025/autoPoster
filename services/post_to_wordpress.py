@@ -47,6 +47,32 @@ def create_wp_client(account: str | None = None) -> WordpressClient | None:
 WP_CLIENT = create_wp_client()
 
 
+def build_paid_block(
+    plan_id: str | None,
+    paid_title: str | None,
+    paid_message: str | None,
+    paid_body: str,
+) -> str:
+    """Return HTML for a WordPress premium content block."""
+    # Ensure attributes have default values
+    plan_id = plan_id or ""
+    paid_title = paid_title or ""
+    paid_message = paid_message or ""
+
+    attrs = {
+        "planIds": [plan_id],
+        "title": paid_title,
+        "message": paid_message,
+    }
+    attr_json = json.dumps(attrs, ensure_ascii=False)
+    block = f"<!-- wp:premium-content/paid-block {attr_json} -->"
+    if paid_title:
+        block += f"<h2>{paid_title}</h2>"
+    block += f"<p>{paid_body}</p>"
+    block += "<!-- /wp:premium-content/paid-block -->"
+    return block
+
+
 def post_to_wordpress(
     title: str,
     content: str,
@@ -90,18 +116,7 @@ def post_to_wordpress(
     if paid_content:
         # Determine plan to use: request override or client default
         plan = plan_id or getattr(client, "plan_id", None)
-        attrs: dict[str, str] = {}
-        if paid_message is not None:
-            attrs["message"] = paid_message
-        if plan is not None:
-            attrs["planId"] = plan
-        attr_json = f" {json.dumps(attrs)}" if attrs else ""
-        block = f"<!-- wp:premium-content/paid-block{attr_json} -->"
-        if paid_title:
-            block += f"<h2>{paid_title}</h2>"
-        block += f"<p>{paid_content}</p>"
-        block += "<!-- /wp:premium-content/paid-block -->"
-        body += block
+        body += build_paid_block(plan, paid_title, paid_message, paid_content)
 
     try:
         post_info = client.create_post(title, body, featured_id)
