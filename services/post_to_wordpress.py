@@ -53,6 +53,9 @@ def post_to_wordpress(
     images: List[tuple[Path, str]] = [],
     account: str | None = None,
     paid_content: str | None = None,
+    paid_title: str | None = None,
+    paid_message: str | None = None,
+    plan_id: str | None = None,
 ) -> dict:
     """Create a WordPress post with optional images."""
     client = WP_CLIENT if account is None else create_wp_client(account)
@@ -85,11 +88,20 @@ def post_to_wordpress(
             featured_id = uploaded.get("id")
 
     if paid_content:
-        body += (
-            "<!-- wp:premium-content/paid-block -->"
-            f"<p>{paid_content}</p>"
-            "<!-- /wp:premium-content/paid-block -->"
-        )
+        # Determine plan to use: request override or client default
+        plan = plan_id or getattr(client, "plan_id", None)
+        attrs: dict[str, str] = {}
+        if paid_message is not None:
+            attrs["message"] = paid_message
+        if plan is not None:
+            attrs["planId"] = plan
+        attr_json = f" {json.dumps(attrs)}" if attrs else ""
+        block = f"<!-- wp:premium-content/paid-block{attr_json} -->"
+        if paid_title:
+            block += f"<h2>{paid_title}</h2>"
+        block += f"<p>{paid_content}</p>"
+        block += "<!-- /wp:premium-content/paid-block -->"
+        body += block
 
     try:
         post_info = client.create_post(title, body, featured_id)

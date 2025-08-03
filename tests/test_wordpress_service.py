@@ -72,6 +72,9 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
         [(img1, "x1.jpg"), (img2, "x2.jpg")],
         account="acc",
         paid_content="Paid",
+        paid_title="PTitle",
+        paid_message="Msg",
+        plan_id="p1",
     )
     assert resp == {"id": 10, "link": "http://post"}
     # Uploaded both images
@@ -84,12 +87,15 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert dummy.created["featured_id"] == 1
     # Paid content added as block in HTML and not sent separately
     assert "wp:premium-content/paid-block" in dummy.created["html"]
+    assert "<h2>PTitle</h2>" in dummy.created["html"]
     assert "<p>Paid</p>" in dummy.created["html"]
+    assert '"message": "Msg"' in dummy.created["html"]
+    assert '"planId": "p1"' in dummy.created["html"]
     assert dummy.created["paid_content"] is None
 
 
 def test_post_to_wordpress_adds_paid_block(monkeypatch):
-    dummy = DummyClient({})
+    dummy = DummyClient({"wordpress": {"accounts": {"default": {"plan_id": "cfg"}}}})
     monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
 
     resp = wp_service.post_to_wordpress(
@@ -98,8 +104,14 @@ def test_post_to_wordpress_adds_paid_block(monkeypatch):
         [],
         account="acc",
         paid_content="Secret",
+        paid_title="Hidden",
+        paid_message="M",
     )
     assert resp == {"id": 10, "link": "http://post"}
     assert "wp:premium-content/paid-block" in dummy.created["html"]
+    assert "<h2>Hidden</h2>" in dummy.created["html"]
     assert "<p>Secret</p>" in dummy.created["html"]
+    assert '"message": "M"' in dummy.created["html"]
+    # plan_id defaults to client's plan_id when not provided
+    assert '"planId": "cfg"' in dummy.created["html"]
     assert dummy.created["paid_content"] is None
