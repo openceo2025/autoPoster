@@ -81,6 +81,7 @@ def test_wordpress_post_success(monkeypatch):
             "title": "T",
             "content": "C",
             "media": [{"filename": "img.png", "data": encoded}],
+            "paid_content": "Paid",
         },
     )
     assert resp.status_code == 200
@@ -93,6 +94,7 @@ def test_wordpress_post_success(monkeypatch):
     assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
     assert payload["title"] == "T"
+    assert payload["paid_content"] == "<p>Paid</p>"
 
 
 def test_wordpress_post_misconfigured(monkeypatch):

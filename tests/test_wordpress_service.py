@@ -20,11 +20,12 @@ class DummyClient:
         idx = len(self.uploaded)
         return {"id": idx, "url": f"http://img{idx}"}
 
-    def create_post(self, title, html, featured_id=None):
+    def create_post(self, title, html, featured_id=None, paid_content=None):
         self.created = {
             "title": title,
             "html": html,
             "featured_id": featured_id,
+            "paid_content": paid_content,
         }
         return {"id": 10, "link": "http://post"}
 
@@ -64,6 +65,7 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
         "Body",
         [(img1, "x1.jpg"), (img2, "x2.jpg")],
         account="acc",
+        paid_content="Paid",
     )
     assert resp == {"id": 10, "link": "http://post"}
     # Uploaded both images
@@ -74,3 +76,4 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert '<img src="http://img2" alt="x2" />' in dummy.created["html"]
     # First image used as featured
     assert dummy.created["featured_id"] == 1
+    assert dummy.created["paid_content"] == "<p>Paid</p>"
