@@ -81,12 +81,20 @@ class WordpressClient:
                 print(getattr(resp, "headers", None))
             raise RuntimeError(f"Media upload failed: {exc}") from exc
 
-    def create_post(self, title: str, html: str, featured_id: int | None = None) -> dict:
+    def create_post(
+        self,
+        title: str,
+        html: str,
+        featured_id: int | None = None,
+        paid_content: str | None = None,
+    ) -> dict:
         """Create and publish a post with optional featured image."""
         url = f"{self.API_BASE.format(site=self.site)}/posts/new"
         payload = {"title": title, "content": html, "status": "publish"}
         if featured_id:
             payload["featured_image"] = featured_id
+        if paid_content is not None:
+            payload["paid_content"] = paid_content
         resp: requests.Response | None = None
         try:
             resp = self.session.post(url, json=payload)

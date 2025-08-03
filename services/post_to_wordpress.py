@@ -52,6 +52,7 @@ def post_to_wordpress(
     content: str,
     images: List[tuple[Path, str]] = [],
     account: str | None = None,
+    paid_content: str | None = None,
 ) -> dict:
     """Create a WordPress post with optional images."""
     client = WP_CLIENT if account is None else create_wp_client(account)
@@ -60,6 +61,7 @@ def post_to_wordpress(
         return {"error": "WordPress client unavailable"}
 
     body = f"<p>{content}</p>"
+    paid_body = f"<p>{paid_content}</p>" if paid_content else None
     featured_id = None
     for img_path, filename in images:
         if not img_path.exists():
@@ -84,7 +86,9 @@ def post_to_wordpress(
             featured_id = uploaded.get("id")
 
     try:
-        post_info = client.create_post(title, body, featured_id)
+        post_info = client.create_post(
+            title, body, featured_id, paid_body
+        )
     except Exception as exc:
         return {"error": str(exc)}
 
