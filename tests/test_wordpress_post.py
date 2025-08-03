@@ -32,7 +32,7 @@ def make_client(monkeypatch, config):
             return DummyResponse({"access_token": "tok"})
         if url.endswith("/media/new"):
             calls["uploads"].append(kwargs["files"]["media[]"])
-            return DummyResponse({"id": 1, "source_url": "http://img"})
+            return DummyResponse({"media": [{"id": 1, "source_url": "http://img"}]})
         if url.endswith("/posts/new"):
             calls["post"] = kwargs.get("json")
             return DummyResponse({"id": 10, "link": "http://post"})
