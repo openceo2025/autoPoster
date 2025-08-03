@@ -174,15 +174,18 @@ Create and publish a post on WordPress.com. The JSON body must specify the
 target `account` (matching `wordpress.accounts` in `config.json`), a `title`,
 and `content`. Optionally include `media`, a list of base64‑encoded images. Each
 image is uploaded and inserted into the post body; the first uploaded image is
-also set as the featured image (アイキャッチ). Ensure your files are within
-WordPress's upload limits and in supported formats such as PNG or JPEG.
+also set as the featured image (アイキャッチ). You can add a premium content
+section by providing `paid_content`; omit the field to skip the block. Ensure
+your files are within WordPress's upload limits and in supported formats such as
+PNG or JPEG.
 
 ```json
 {
   "account": "account1",
   "title": "Hello WP",
   "content": "Article body",
-  "media": ["base64image"]
+  "media": ["base64image"],
+  "paid_content": "Subscriber only text"
 }
 ```
 
@@ -191,7 +194,7 @@ Example using `curl`:
 ```bash
 curl -X POST http://localhost:8765/wordpress/post \
      -H 'Content-Type: application/json' \
-     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "media": ["b64"]}'
+     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "media": ["b64"], "paid_content": "Subscriber only text"}'
 ```
 
 ### `POST /note/draft`
