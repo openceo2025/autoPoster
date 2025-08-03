@@ -64,7 +64,17 @@ class WordpressClient:
             print(getattr(resp, "headers", None))
             resp.raise_for_status()
             data = resp.json()
-            return {"id": data.get("id"), "url": data.get("source_url") or data.get("link")}
+            media = data.get("media")
+            if media:
+                item = media[0]
+                media_id = item.get("id")
+                media_url = item.get("source_url") or item.get("URL") or item.get("link")
+            else:
+                media_id = data.get("id")
+                media_url = (
+                    data.get("source_url") or data.get("URL") or data.get("link")
+                )
+            return {"id": media_id, "url": media_url}
         except Exception as exc:
             if resp is not None:
                 print(resp.status_code, resp.text)
