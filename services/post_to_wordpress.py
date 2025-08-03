@@ -75,7 +75,11 @@ def post_to_wordpress(
             print(f"Failed image {img_path}: {exc}")
             raise
         url = uploaded.get("url")
-        body += f'<img src="{url}" />'
+        if not url:
+            print(f"No URL returned for {img_path}, skipping image tag")
+            continue
+        alt_text = uploaded.get("alt") or uploaded.get("title") or Path(filename).stem
+        body += f'<img src="{url}" alt="{alt_text}" />'
         if featured_id is None:
             featured_id = uploaded.get("id")
 
