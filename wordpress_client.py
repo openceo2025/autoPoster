@@ -25,6 +25,7 @@ class WordpressClient:
         self.client_secret = acct.get("client_secret")
         self.username = acct.get("username")
         self.password = acct.get("password")
+        self.plan_id: str | None = acct.get("plan_id")
         self.access_token: str | None = None
 
     def authenticate(self) -> None:
