@@ -298,6 +298,9 @@ class WordpressPostRequest(BaseModel):
     content: str
     media: Optional[List[WordpressMediaItem]] = None
     paid_content: Optional[str] = None
+    paid_title: Optional[str] = None
+    paid_message: Optional[str] = None
+    plan_id: Optional[str] = None
 
 
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
@@ -361,6 +364,9 @@ def post_to_wordpress(
     content: str,
     media: Optional[List[WordpressMediaItem]] = None,
     paid_content: Optional[str] = None,
+    paid_title: Optional[str] = None,
+    paid_message: Optional[str] = None,
+    plan_id: Optional[str] = None,
 ):
     if account in WORDPRESS_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
@@ -389,7 +395,14 @@ def post_to_wordpress(
                 return {"error": f"Media upload failed: {exc}"}
 
     result = service_post_to_wordpress(
-        title, content, images, account, paid_content=paid_content
+        title,
+        content,
+        images,
+        account,
+        paid_content=paid_content,
+        paid_title=paid_title,
+        paid_message=paid_message,
+        plan_id=plan_id,
     )
     for p, _ in images:
         try:
@@ -422,7 +435,14 @@ async def twitter_post(data: TwitterPostRequest):
 @app.post("/wordpress/post")
 async def wordpress_post(data: WordpressPostRequest):
     return post_to_wordpress(
-        data.account, data.title, data.content, data.media, data.paid_content
+        data.account,
+        data.title,
+        data.content,
+        data.media,
+        data.paid_content,
+        data.paid_title,
+        data.paid_message,
+        data.plan_id,
     )
 
 

@@ -82,6 +82,9 @@ def test_wordpress_post_success(monkeypatch):
             "content": "C",
             "media": [{"filename": "img.png", "data": encoded}],
             "paid_content": "Paid",
+            "paid_title": "PT",
+            "paid_message": "Msg",
+            "plan_id": "p1",
         },
     )
     assert resp.status_code == 200
@@ -95,7 +98,10 @@ def test_wordpress_post_success(monkeypatch):
     assert "http://img" in payload["content"]
     assert payload["title"] == "T"
     assert "wp:premium-content/paid-block" in payload["content"]
+    assert "<h2>PT</h2>" in payload["content"]
     assert "<p>Paid</p>" in payload["content"]
+    assert '"message": "Msg"' in payload["content"]
+    assert '"planId": "p1"' in payload["content"]
     assert "paid_content" not in payload
 
 
@@ -109,6 +115,7 @@ def test_wordpress_post_paid_block(monkeypatch):
                     "client_secret": "sec",
                     "username": "user",
                     "password": "pwd",
+                    "plan_id": "cfg",
                 }
             }
         }
@@ -121,13 +128,18 @@ def test_wordpress_post_paid_block(monkeypatch):
             "title": "T",
             "content": "C",
             "paid_content": "Secret",
+            "paid_title": "Hidden",
+            "paid_message": "M",
         },
     )
     assert resp.status_code == 200
     payload = calls["post"]
     assert payload["title"] == "T"
     assert "wp:premium-content/paid-block" in payload["content"]
+    assert "<h2>Hidden</h2>" in payload["content"]
     assert "<p>Secret</p>" in payload["content"]
+    assert '"message": "M"' in payload["content"]
+    assert '"planId": "cfg"' in payload["content"]
     assert "paid_content" not in payload
 
 
