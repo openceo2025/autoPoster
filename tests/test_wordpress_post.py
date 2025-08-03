@@ -76,12 +76,18 @@ def test_wordpress_post_success(monkeypatch):
     encoded = base64.b64encode(data).decode()
     resp = client.post(
         "/wordpress/post",
-        json={"account": "acc", "title": "T", "content": "C", "media": [encoded]},
+        json={
+            "account": "acc",
+            "title": "T",
+            "content": "C",
+            "media": [{"filename": "img.png", "data": encoded}],
+        },
     )
     assert resp.status_code == 200
     assert resp.json() == {"id": 10, "link": "http://post"}
     assert len(calls["uploads"]) == 1
     filename, content = calls["uploads"][0]
+    assert filename == "img.png"
     assert content == data
     payload = calls["post"]
     assert payload["featured_image"] == 1
@@ -107,7 +113,12 @@ def test_wordpress_post_misconfigured(monkeypatch):
     encoded = base64.b64encode(b"x").decode()
     resp = client.post(
         "/wordpress/post",
-        json={"account": "acc", "title": "T", "content": "C", "media": [encoded]},
+        json={
+            "account": "acc",
+            "title": "T",
+            "content": "C",
+            "media": [{"filename": "img.png", "data": encoded}],
+        },
     )
     assert resp.status_code == 200
     assert resp.json()["error"] == "Account misconfigured"

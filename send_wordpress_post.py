@@ -1,5 +1,7 @@
 import base64
 import json
+from pathlib import Path
+
 import requests
 
 URL = "http://localhost:8765/wordpress/post"
@@ -18,7 +20,12 @@ def main():
         "account": ACCOUNT,
         "title": TITLE,
         "content": CONTENT,
-        "media": [media_b64],
+        "media": [
+            {
+                "filename": Path(MEDIA_PATH).name,
+                "data": media_b64,
+            }
+        ],
     }
 
     headers = {"Content-Type": "application/json"}
