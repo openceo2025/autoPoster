@@ -80,3 +80,20 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert "wp:premium-content/paid-block" in dummy.created["html"]
     assert "<p>Paid</p>" in dummy.created["html"]
     assert dummy.created["paid_content"] is None
+
+
+def test_post_to_wordpress_adds_paid_block(monkeypatch):
+    dummy = DummyClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    resp = wp_service.post_to_wordpress(
+        "T",
+        "B",
+        [],
+        account="acc",
+        paid_content="Secret",
+    )
+    assert resp == {"id": 10, "link": "http://post"}
+    assert "wp:premium-content/paid-block" in dummy.created["html"]
+    assert "<p>Secret</p>" in dummy.created["html"]
+    assert dummy.created["paid_content"] is None
