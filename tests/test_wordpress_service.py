@@ -117,3 +117,18 @@ def test_post_to_wordpress_adds_paid_block(monkeypatch):
     # plan_id defaults to client's plan_id when not provided
     assert '"planId": "cfg"' in dummy.created["html"]
     assert dummy.created["paid_content"] is None
+
+
+def test_post_to_wordpress_without_paid_content(monkeypatch):
+    dummy = DummyClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    resp = wp_service.post_to_wordpress(
+        "Title",
+        "Body",
+        [],
+        account="acc",
+    )
+    assert resp == {"id": 10, "link": "http://post"}
+    assert "wp:jetpack/subscribers-only-content" not in dummy.created["html"]
+    assert dummy.created["paid_content"] is None
