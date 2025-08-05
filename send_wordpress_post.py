@@ -6,7 +6,7 @@ import requests
 
 URL = "http://localhost:8765/wordpress/post"
 ACCOUNT = "nicchi"  # must match an entry in config.json
-TITLE = "これはWordPressへの自動投稿テストです"
+TITLE = "これはWordPressへの自動投稿テストです12"
 CONTENT = "自動投稿された記事の本文です"
 MEDIA_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with an actual file path
 # Text visible only to paid subscribers. Replace with your own text or set to
