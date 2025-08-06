@@ -11,16 +11,16 @@ CONTENT = "自動投稿された記事の本文です"
 MEDIA_PATH = "example/sss.png"  # replace with an actual file path
 # Text visible only to paid subscribers. Replace with your own text or set to
 # ``None`` to omit the paid block entirely.
-PAID_CONTENT = "None"
+PAID_CONTENT = None
 # Heading displayed above the premium content block. Set to ``None`` to omit
 # the heading entirely.
-PAID_TITLE = "None"
+PAID_TITLE = None
 # Message shown to visitors without access. Set to ``None`` to use the
 # WordPress default message.
-PAID_MESSAGE = "None"
+PAID_MESSAGE = None
 # Subscription plan that grants access to the paid block. Set to ``None`` to
 # use the plan configured for the WordPress account.
-PLAN_ID = "None"# これたぶん25じゃない？
+PLAN_ID = None# これたぶん25じゃない？
 
 
 def main():
