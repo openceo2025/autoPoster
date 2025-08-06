@@ -88,6 +88,8 @@ class WordpressClient:
         html: str,
         featured_id: int | None = None,
         paid_content: str | None = None,
+        categories: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> dict:
         """Create and publish a post with optional featured image."""
         url = f"{self.API_BASE.format(site=self.site)}/posts/new"
@@ -96,6 +98,10 @@ class WordpressClient:
             payload["featured_image"] = featured_id
         if paid_content is not None:
             payload["paid_content"] = paid_content
+        if categories:
+            payload["categories"] = ",".join(categories)
+        if tags:
+            payload["tags"] = ",".join(tags)
         resp: requests.Response | None = None
         try:
             resp = self.session.post(url, json=payload)

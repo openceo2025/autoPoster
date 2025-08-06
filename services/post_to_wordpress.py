@@ -82,6 +82,8 @@ def post_to_wordpress(
     paid_title: str | None = None,
     paid_message: str | None = None,
     plan_id: str | None = None,
+    categories: list[str] | None = None,
+    tags: list[str] | None = None,
 ) -> dict:
     """Create a WordPress post with optional images."""
     client = WP_CLIENT if account is None else create_wp_client(account)
@@ -119,7 +121,13 @@ def post_to_wordpress(
         body += build_paid_block(plan, paid_title, paid_message, paid_content)
 
     try:
-        post_info = client.create_post(title, body, featured_id)
+        post_info = client.create_post(
+            title,
+            body,
+            featured_id,
+            categories=categories,
+            tags=tags,
+        )
     except Exception as exc:
         return {"error": str(exc)}
 

@@ -106,6 +106,37 @@ def test_wordpress_post_success(monkeypatch):
     assert "paid_content" not in payload
 
 
+def test_wordpress_post_with_categories_tags(monkeypatch):
+    cfg = {
+        "wordpress": {
+            "accounts": {
+                "acc": {
+                    "site": "mysite",
+                    "client_id": "id",
+                    "client_secret": "sec",
+                    "username": "user",
+                    "password": "pwd",
+                }
+            }
+        }
+    }
+    client, calls = make_client(monkeypatch, cfg)
+    resp = client.post(
+        "/wordpress/post",
+        json={
+            "account": "acc",
+            "title": "T",
+            "content": "C",
+            "categories": ["News", "Tech"],
+            "tags": ["python", "fastapi"],
+        },
+    )
+    assert resp.status_code == 200
+    payload = calls["post"]
+    assert payload["categories"] == "News,Tech"
+    assert payload["tags"] == "python,fastapi"
+
+
 def test_wordpress_post_paid_block(monkeypatch):
     cfg = {
         "wordpress": {
