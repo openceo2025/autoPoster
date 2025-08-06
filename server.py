@@ -301,6 +301,8 @@ class WordpressPostRequest(BaseModel):
     paid_title: Optional[str] = None
     paid_message: Optional[str] = None
     plan_id: Optional[str] = None
+    categories: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
 
 
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
@@ -367,6 +369,8 @@ def post_to_wordpress(
     paid_title: Optional[str] = None,
     paid_message: Optional[str] = None,
     plan_id: Optional[str] = None,
+    categories: Optional[List[str]] = None,
+    tags: Optional[List[str]] = None,
 ):
     if account in WORDPRESS_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
@@ -403,6 +407,8 @@ def post_to_wordpress(
         paid_title=paid_title,
         paid_message=paid_message,
         plan_id=plan_id,
+        categories=categories,
+        tags=tags,
     )
     for p, _ in images:
         try:
@@ -443,6 +449,8 @@ async def wordpress_post(data: WordpressPostRequest):
         data.paid_title,
         data.paid_message,
         data.plan_id,
+        data.categories,
+        data.tags,
     )
 
 

@@ -26,12 +26,22 @@ class DummyClient:
         idx = len(self.uploaded)
         return {"id": idx, "url": f"http://img{idx}"}
 
-    def create_post(self, title, html, featured_id=None, paid_content=None):
+    def create_post(
+        self,
+        title,
+        html,
+        featured_id=None,
+        paid_content=None,
+        categories=None,
+        tags=None,
+    ):
         self.created = {
             "title": title,
             "html": html,
             "featured_id": featured_id,
             "paid_content": paid_content,
+            "categories": categories,
+            "tags": tags,
         }
         return {"id": 10, "link": "http://post"}
 
@@ -132,3 +142,20 @@ def test_post_to_wordpress_without_paid_content(monkeypatch):
     assert resp == {"id": 10, "link": "http://post"}
     assert "wp:jetpack/subscribers-only-content" not in dummy.created["html"]
     assert dummy.created["paid_content"] is None
+
+
+def test_post_to_wordpress_categories_tags(monkeypatch):
+    dummy = DummyClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    resp = wp_service.post_to_wordpress(
+        "Title",
+        "Body",
+        [],
+        account="acc",
+        categories=["News", "Tech"],
+        tags=["python", "fastapi"],
+    )
+    assert resp == {"id": 10, "link": "http://post"}
+    assert dummy.created["categories"] == ["News", "Tech"]
+    assert dummy.created["tags"] == ["python", "fastapi"]
