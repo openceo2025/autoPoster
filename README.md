@@ -289,3 +289,9 @@ Check the server logs for messages like `Mastodon config error for account1` or
 `Twitter config error for account1` and update `config.json` with the correct
 information before restarting the server.
 
+
+## Development status
+
+現在このプロジェクトは一時停止中です。WordPress 投稿はカテゴリとタグを指定でき、`paid_content` を使ったプレミアムコンテンツブロックも挿入できますが、WordPress.com 側の制約により有料コンテンツ機能の検証は進んでいません。また、メディアアップロードのレスポンス解析が不完全なため、画像が壊れて表示される既知の問題があります。
+
+次に再開する際は、上記の画像処理の修正と有料コンテンツ機能の仕上げに取り組んでください。詳細なタスクは `AGENTS.md` を参照してください。
