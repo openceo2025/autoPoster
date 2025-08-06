@@ -22,6 +22,9 @@ PAID_MESSAGE = None
 # use the plan configured for the WordPress account.
 PLAN_ID = None# これたぶん25じゃない？
 
+CATEGORIES = ["test"]
+TAGS = ["sample", "日本語テスト"]
+
 
 def main():
     # Read the media file and encode as base64
@@ -51,6 +54,8 @@ def main():
         # set ``PLAN_ID`` to ``None`` or remove the key to use the plan
         # configured for the WordPress account.
         "plan_id": PLAN_ID,
+        "categories": CATEGORIES,
+        "tags": TAGS,
     }
 
     headers = {"Content-Type": "application/json"}
