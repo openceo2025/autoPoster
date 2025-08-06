@@ -8,19 +8,19 @@ URL = "http://localhost:8765/wordpress/post"
 ACCOUNT = "nicchi"  # must match an entry in config.json
 TITLE = "これはWordPressへの自動投稿テストです12"
 CONTENT = "自動投稿された記事の本文です"
-MEDIA_PATH = "example/b6701f05-1e2e-4776-a7c3-69c13c469514.png"  # replace with an actual file path
+MEDIA_PATH = "example/sss.png"  # replace with an actual file path
 # Text visible only to paid subscribers. Replace with your own text or set to
 # ``None`` to omit the paid block entirely.
-PAID_CONTENT = "ここから先は有料会員限定です"
+PAID_CONTENT = "None"
 # Heading displayed above the premium content block. Set to ``None`` to omit
 # the heading entirely.
-PAID_TITLE = "有料会員限定"
+PAID_TITLE = "None"
 # Message shown to visitors without access. Set to ``None`` to use the
 # WordPress default message.
-PAID_MESSAGE = "購読すると続きを閲覧できます"
+PAID_MESSAGE = "None"
 # Subscription plan that grants access to the paid block. Set to ``None`` to
 # use the plan configured for the WordPress account.
-PLAN_ID = "plan_basic"
+PLAN_ID = "None"　#これたぶん25じゃない？
 
 
 def main():
