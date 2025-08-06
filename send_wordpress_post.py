@@ -20,7 +20,7 @@ PAID_TITLE = "None"
 PAID_MESSAGE = "None"
 # Subscription plan that grants access to the paid block. Set to ``None`` to
 # use the plan configured for the WordPress account.
-PLAN_ID = "None"　#これたぶん25じゃない？
+PLAN_ID = "None"# これたぶん25じゃない？
 
 
 def main():
