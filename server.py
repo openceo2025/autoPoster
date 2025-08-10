@@ -17,7 +17,7 @@ from services.wordpress_stats import (
 import os
 import tempfile
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from pydantic import BaseModel
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
@@ -32,6 +32,19 @@ else:
 print(json.dumps(CONFIG.get('note', {}), indent=2))
 
 app = FastAPI(title="autoPoster")
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log incoming API requests with method, path and body."""
+    body = await request.body()
+    try:
+        body_text = body.decode("utf-8")
+    except Exception:
+        body_text = str(body)
+    print(f"{request.method} {request.url.path} {body_text}")
+    response = await call_next(request)
+    return response
 
 
 def validate_mastodon_accounts(config: Dict) -> Dict[str, str]:
