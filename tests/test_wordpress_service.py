@@ -119,7 +119,6 @@ def test_post_to_wordpress_adds_paid_block(monkeypatch):
     resp = wp_service.post_to_wordpress(
         "T",
         "B",
-        [],
         account="acc",
         paid_content="Secret",
         paid_title="Hidden",
@@ -143,7 +142,6 @@ def test_post_to_wordpress_without_paid_content(monkeypatch):
     resp = wp_service.post_to_wordpress(
         "Title",
         "Body",
-        [],
         account="acc",
     )
     assert resp == {"id": 10, "link": "http://post", "site": "mysite"}
@@ -158,7 +156,6 @@ def test_post_to_wordpress_categories_tags(monkeypatch):
     resp = wp_service.post_to_wordpress(
         "Title",
         "Body",
-        [],
         account="acc",
         categories=["News", "Tech"],
         tags=["python", "fastapi"],
