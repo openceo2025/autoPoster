@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import pytest
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 import server
@@ -88,4 +89,24 @@ def test_wordpress_search_terms_endpoint(monkeypatch):
         == "https://public-api.wordpress.com/rest/v1.1/sites/mysite/stats/search-terms"
     )
     assert captured["params"] == {"days": 7}
+
+
+@pytest.mark.parametrize("days", [0, -1])
+def test_wordpress_views_invalid_days(days):
+    app = TestClient(server.app)
+    resp = app.get(
+        "/wordpress/stats/views",
+        params={"post_id": 1, "days": days},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.parametrize("days", [0, -1])
+def test_wordpress_search_terms_invalid_days(days):
+    app = TestClient(server.app)
+    resp = app.get(
+        "/wordpress/stats/search-terms",
+        params={"days": days},
+    )
+    assert resp.status_code == 422
 

@@ -17,7 +17,7 @@ from services.wordpress_stats import (
 import os
 import tempfile
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
@@ -460,12 +460,19 @@ async def wordpress_post(data: WordpressPostRequest):
 
 
 @app.get("/wordpress/stats/views")
-async def wordpress_post_views(post_id: int, days: int, account: str | None = None):
+async def wordpress_post_views(
+    post_id: int = Query(..., gt=0),
+    days: int = Query(..., gt=0, le=30),
+    account: str | None = None,
+):
     return service_get_post_views(account, post_id, days)
 
 
 @app.get("/wordpress/stats/search-terms")
-async def wordpress_search_terms(days: int, account: str | None = None):
+async def wordpress_search_terms(
+    days: int = Query(..., gt=0, le=30),
+    account: str | None = None,
+):
     return service_get_search_terms(account, days)
 
 
