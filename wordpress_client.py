@@ -119,7 +119,7 @@ class WordpressClient:
         params = {"unit": "day", "quantity": days}
         resp: requests.Response | None = None
         try:
-            resp = requests.get(url, headers=self.session.headers, params=params)
+            resp = self.session.get(url, headers=self.session.headers, params=params)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -133,7 +133,7 @@ class WordpressClient:
         params = {"days": days}
         resp: requests.Response | None = None
         try:
-            resp = requests.get(url, headers=self.session.headers, params=params)
+            resp = self.session.get(url, headers=self.session.headers, params=params)
             resp.raise_for_status()
             data = resp.json()
             return data.get("search_terms", [])
