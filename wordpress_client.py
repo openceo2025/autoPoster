@@ -1,8 +1,12 @@
+import logging
 import requests
 
 
 class WordpressAuthError(Exception):
     """Raised when authentication with WordPress fails."""
+
+
+logger = logging.getLogger(__name__)
 
 
 class WordpressClient:
@@ -41,7 +45,9 @@ class WordpressClient:
         resp: requests.Response | None = None
         try:
             resp = self.session.post(self.TOKEN_URL, data=data)
-            print(resp.status_code, resp.text)
+            logger.debug(
+                "Auth response status: %s, body: [redacted]", resp.status_code
+            )
             resp.raise_for_status()
             token = resp.json().get("access_token")
             if not token:
@@ -50,7 +56,9 @@ class WordpressClient:
             self.session.headers.update({"Authorization": f"Bearer {token}"})
         except Exception as exc:
             if resp is not None:
-                print(resp.status_code, resp.text)
+                logger.debug(
+                    "Auth failure status: %s, body: [redacted]", resp.status_code
+                )
             raise WordpressAuthError(f"Authentication failed: {exc}") from exc
 
     def upload_media(self, content: bytes, filename: str) -> dict:
