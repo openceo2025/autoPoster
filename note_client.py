@@ -1,8 +1,12 @@
 from pathlib import Path
+import logging
 import requests
 
 class NoteAuthError(Exception):
     """Raised when authentication with Note fails."""
+
+
+logger = logging.getLogger(__name__)
 
 
 class NoteClient:
@@ -24,7 +28,9 @@ class NoteClient:
             url, json={"login": username, "password": password}
         )
         self.session.cookies.update(resp.cookies)
-        print(f'Login status: {resp.status_code}, body: {resp.text}')
+        logger.debug(
+            "Login status: %s, body: [redacted]", resp.status_code
+        )
         if resp.status_code not in (200, 201):
             raise NoteAuthError(f"Login failed with status {resp.status_code}")
 
