@@ -46,6 +46,41 @@ def test_wordpress_views_endpoint(monkeypatch):
     assert captured["params"] == {"unit": "day", "quantity": 5}
 
 
+def test_wordpress_views_no_data(monkeypatch):
+    captured = {}
+
+    def fake_get(url, headers=None, params=None):
+        captured["url"] = url
+        captured["params"] = params
+        class DummyResp:
+            status_code = 200
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {}
+
+        return DummyResp()
+
+    cfg = {"wordpress": {"accounts": {"default": {"site": "mysite"}}}}
+    client = wordpress_client.WordpressClient(cfg)
+    client.access_token = "tok"
+    client.session.headers.update({"Authorization": "Bearer tok"})
+    monkeypatch.setattr(client.session, "get", fake_get)
+
+    monkeypatch.setattr(wp_stats, "WP_CLIENT", client)
+    monkeypatch.setattr(wp_stats, "create_wp_client", lambda account=None: client)
+
+    app = TestClient(server.app)
+    resp = app.get(
+        "/wordpress/stats/views",
+        params={"account": "acc", "post_id": 10, "days": 5},
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"error": "No view data returned"}
+
+
 def test_wordpress_search_terms_endpoint(monkeypatch):
     captured = {}
 
