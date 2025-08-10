@@ -22,12 +22,11 @@ def test_wordpress_views_endpoint(monkeypatch):
                 return {"views": [1, 2, 3]}
         return DummyResp()
 
-    monkeypatch.setattr(wordpress_client.requests, "get", fake_get)
-
     cfg = {"wordpress": {"accounts": {"default": {"site": "mysite"}}}}
     client = wordpress_client.WordpressClient(cfg)
     client.access_token = "tok"
     client.session.headers.update({"Authorization": "Bearer tok"})
+    monkeypatch.setattr(client.session, "get", fake_get)
 
     monkeypatch.setattr(wp_stats, "WP_CLIENT", client)
     monkeypatch.setattr(wp_stats, "create_wp_client", lambda account=None: client)
@@ -63,12 +62,11 @@ def test_wordpress_search_terms_endpoint(monkeypatch):
 
         return DummyResp()
 
-    monkeypatch.setattr(wordpress_client.requests, "get", fake_get)
-
     cfg = {"wordpress": {"accounts": {"default": {"site": "mysite"}}}}
     client = wordpress_client.WordpressClient(cfg)
     client.access_token = "tok"
     client.session.headers.update({"Authorization": "Bearer tok"})
+    monkeypatch.setattr(client.session, "get", fake_get)
 
     monkeypatch.setattr(wp_stats, "WP_CLIENT", client)
     monkeypatch.setattr(wp_stats, "create_wp_client", lambda account=None: client)
