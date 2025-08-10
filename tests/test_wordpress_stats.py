@@ -58,7 +58,7 @@ def test_wordpress_search_terms_endpoint(monkeypatch):
                 pass
 
             def json(self):
-                return {"search_terms": ["foo", "bar"]}
+                return {"search_terms": [["foo", 4], ["bar", 2]]}
 
         return DummyResp()
 
@@ -77,7 +77,12 @@ def test_wordpress_search_terms_endpoint(monkeypatch):
         params={"account": "acc", "days": 7},
     )
     assert resp.status_code == 200
-    assert resp.json() == {"terms": ["foo", "bar"]}
+    assert resp.json() == {
+        "terms": [
+            {"term": "foo", "views": 4},
+            {"term": "bar", "views": 2},
+        ]
+    }
     assert (
         captured["url"]
         == "https://public-api.wordpress.com/rest/v1.1/sites/mysite/stats/search-terms"
