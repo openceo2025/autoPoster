@@ -10,6 +10,7 @@ from note_client import NoteClient
 from wordpress_client import WordpressClient
 from services.post_to_note import post_to_note
 from services.post_to_wordpress import post_to_wordpress as service_post_to_wordpress
+from services.wordpress_stats import get_post_views as service_get_post_views
 import os
 import tempfile
 
@@ -453,6 +454,11 @@ async def wordpress_post(data: WordpressPostRequest):
         data.tags,
     )
     return post_info
+
+
+@app.get("/wordpress/stats/views")
+async def wordpress_post_views(post_id: int, days: int, account: str | None = None):
+    return service_get_post_views(account, post_id, days)
 
 
 @app.post("/note/draft")
