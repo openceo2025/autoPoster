@@ -271,6 +271,32 @@ Sample response:
 { "views": [1, 2, 3] }
 ```
 
+### `GET /wordpress/stats/search-terms`
+
+Retrieve the search terms that led visitors to your site.
+
+Query parameters:
+
+- `account`: WordPress account name from `config.json`.
+- `days`: Number of days of statistics to return.
+
+Example using `curl`:
+
+```bash
+curl "http://localhost:8765/wordpress/stats/search-terms?account=account1&days=30"
+```
+
+Sample response:
+
+```json
+{
+  "terms": [
+    { "term": "example", "views": 5 },
+    { "term": "hello", "views": 2 }
+  ]
+}
+```
+
 ### `POST /note/draft`
 
 Create a draft on a configured Note account. Specify the account name in
