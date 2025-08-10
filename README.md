@@ -238,9 +238,12 @@ Sample response:
 ```json
 {
   "id": 10,
-  "link": "http://post"
+  "link": "http://post",
+  "site": "your-site.wordpress.com"
 }
 ```
+
+Clients should store the `{site, id}` pair for Stats API calls.
 
 If the site does not have a plan that supports Premium Content, WordPress.com
 returns an error and the API responds with a message such as `{"error":
