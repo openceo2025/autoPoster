@@ -10,7 +10,10 @@ def get_post_views(account: str | None, post_id: int, days: int) -> dict:
         data = client.get_post_views(post_id, days)
     except Exception as exc:
         return {"error": str(exc)}
-    return {"views": data.get("views")}
+    views = data.get("views")
+    if views is None:
+        return {"error": "No view data returned"}
+    return {"views": views}
 
 
 def get_search_terms(account: str | None, days: int) -> dict:
