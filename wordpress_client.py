@@ -112,3 +112,17 @@ class WordpressClient:
             if resp is not None:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Post creation failed: {exc}") from exc
+
+    def get_post_views(self, post_id: int, days: int) -> dict:
+        """Return view statistics for a post over a number of days."""
+        url = f"{self.API_BASE.format(site=self.site)}/stats/post/{post_id}"
+        params = {"unit": "day", "quantity": days}
+        resp: requests.Response | None = None
+        try:
+            resp = requests.get(url, headers=self.session.headers, params=params)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Fetching post views failed: {exc}") from exc
