@@ -440,7 +440,7 @@ async def twitter_post(data: TwitterPostRequest):
 
 @app.post("/wordpress/post")
 async def wordpress_post(data: WordpressPostRequest):
-    return post_to_wordpress(
+    post_info = post_to_wordpress(
         data.account,
         data.title,
         data.content,
@@ -452,6 +452,7 @@ async def wordpress_post(data: WordpressPostRequest):
         data.categories,
         data.tags,
     )
+    return post_info
 
 
 @app.post("/note/draft")
