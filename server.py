@@ -402,23 +402,25 @@ def post_to_wordpress(
                         pass
                 return {"error": f"Media upload failed: {exc}"}
 
-    result = service_post_to_wordpress(
-        title,
-        content,
-        images,
-        account,
-        paid_content=paid_content,
-        paid_title=paid_title,
-        paid_message=paid_message,
-        plan_id=plan_id,
-        categories=categories,
-        tags=tags,
-    )
-    for p, _ in images:
-        try:
-            os.unlink(p)
-        except Exception:
-            pass
+    try:
+        result = service_post_to_wordpress(
+            title,
+            content,
+            images,
+            account,
+            paid_content=paid_content,
+            paid_title=paid_title,
+            paid_message=paid_message,
+            plan_id=plan_id,
+            categories=categories,
+            tags=tags,
+        )
+    finally:
+        for p, _ in images:
+            try:
+                os.unlink(p)
+            except Exception:
+                pass
     return result
 
 @app.get("/")

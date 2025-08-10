@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 import requests
 import server
 import services.post_to_wordpress as wp_service
+import tempfile
+from pathlib import Path
 
 
 class DummyResponse:
@@ -205,3 +207,35 @@ def test_wordpress_post_misconfigured(monkeypatch):
     assert resp.json()["error"] == "Account misconfigured"
     assert calls["uploads"] == []
     assert calls["post"] is None
+
+
+def test_wordpress_post_cleans_temp_files_on_service_exception(monkeypatch, tmp_path):
+    monkeypatch.setattr(server, "WORDPRESS_ACCOUNT_ERRORS", set(), raising=False)
+    monkeypatch.setattr(server, "WORDPRESS_CLIENTS", {"acc": object()}, raising=False)
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(server, "service_post_to_wordpress", boom)
+
+    created: list[Path] = []
+    original_ntf = tempfile.NamedTemporaryFile
+
+    def fake_ntf(*args, **kwargs):
+        kwargs.setdefault("delete", False)
+        kwargs["dir"] = tmp_path
+        tmp = original_ntf(*args, **kwargs)
+        created.append(Path(tmp.name))
+        return tmp
+
+    monkeypatch.setattr(tempfile, "NamedTemporaryFile", fake_ntf)
+
+    data = base64.b64encode(b"x").decode()
+    media_item = server.WordpressMediaItem(filename="img.png", data=data)
+
+    with pytest.raises(RuntimeError):
+        server.post_to_wordpress("acc", "T", "C", media=[media_item])
+
+    assert created, "temporary file was not created"
+    for p in created:
+        assert not p.exists()
