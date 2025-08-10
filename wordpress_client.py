@@ -127,8 +127,8 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Fetching post views failed: {exc}") from exc
 
-    def get_search_terms(self, days: int) -> list[str]:
-        """Return search terms over a number of days."""
+    def get_search_terms(self, days: int) -> list[dict]:
+        """Return search terms and view counts over a number of days."""
         url = f"{self.API_BASE.format(site=self.site)}/stats/search-terms"
         params = {"days": days}
         resp: requests.Response | None = None
@@ -136,7 +136,15 @@ class WordpressClient:
             resp = self.session.get(url, headers=self.session.headers, params=params)
             resp.raise_for_status()
             data = resp.json()
-            return data.get("search_terms", [])
+            terms = data.get("search_terms", [])
+            parsed: list[dict] = []
+            for item in terms:
+                if (
+                    isinstance(item, (list, tuple))
+                    and len(item) >= 2
+                ):
+                    parsed.append({"term": item[0], "views": item[1]})
+            return parsed
         except Exception as exc:
             if resp is not None:
                 print(resp.status_code, resp.text)

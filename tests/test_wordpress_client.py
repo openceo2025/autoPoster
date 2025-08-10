@@ -65,3 +65,18 @@ def test_plan_id_from_config():
 def test_plan_id_default_none():
     client = WordpressClient({"wordpress": {"site": "s"}})
     assert client.plan_id is None
+
+
+def test_get_search_terms_parses_views(monkeypatch):
+    client = _make_client()
+
+    def fake_get(url, headers=None, params=None):
+        assert params == {"days": 7}
+        return DummyResp({"search_terms": [["foo", 5], ["bar", 1]]})
+
+    monkeypatch.setattr(client.session, "get", fake_get)
+    terms = client.get_search_terms(7)
+    assert terms == [
+        {"term": "foo", "views": 5},
+        {"term": "bar", "views": 1},
+    ]
