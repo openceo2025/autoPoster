@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import List
 
 from wordpress_client import WordpressClient
 
@@ -76,7 +75,7 @@ def build_paid_block(
 def post_to_wordpress(
     title: str,
     content: str,
-    images: List[tuple[Path, str]] = [],
+    images: list[tuple[Path, str]] | None = None,
     account: str | None = None,
     paid_content: str | None = None,
     paid_title: str | None = None,
@@ -93,6 +92,7 @@ def post_to_wordpress(
 
     body = f"<p>{content}</p>"
     featured_id = None
+    images = images or []
     for img_path, filename in images:
         if not img_path.exists():
             return {"error": f"Image file not found: {img_path}"}
