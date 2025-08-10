@@ -249,6 +249,28 @@ If the site does not have a plan that supports Premium Content, WordPress.com
 returns an error and the API responds with a message such as `{"error":
 "Paid content block requires an upgrade"}` and the post is not published.
 
+### `GET /wordpress/stats/views`
+
+Retrieve daily view counts for a specific post.
+
+Query parameters:
+
+- `account`: WordPress account name from `config.json`.
+- `post_id`: ID of the post to fetch stats for.
+- `days`: Number of days of statistics to return.
+
+Example using `curl`:
+
+```bash
+curl "http://localhost:8765/wordpress/stats/views?account=account1&post_id=10&days=3"
+```
+
+Sample response:
+
+```json
+{ "views": [1, 2, 3] }
+```
+
 ### `POST /note/draft`
 
 Create a draft on a configured Note account. Specify the account name in
