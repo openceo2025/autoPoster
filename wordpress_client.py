@@ -126,3 +126,20 @@ class WordpressClient:
             if resp is not None:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Fetching post views failed: {exc}") from exc
+
+    def get_search_terms(self, days: int) -> list[str]:
+        """Return search terms over a number of days."""
+        url = f"{self.API_BASE.format(site=self.site)}/stats/search-terms"
+        params = {"days": days}
+        resp: requests.Response | None = None
+        try:
+            resp = requests.get(url, headers=self.session.headers, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("search_terms", [])
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(
+                f"Fetching search terms failed: {exc}"
+            ) from exc

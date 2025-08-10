@@ -12,3 +12,15 @@ def get_post_views(account: str | None, post_id: int, days: int) -> dict:
         return {"error": str(exc)}
     return {"views": data.get("views")}
 
+
+def get_search_terms(account: str | None, days: int) -> dict:
+    """Fetch search terms for a WordPress site."""
+    client = WP_CLIENT if account is None else create_wp_client(account)
+    if client is None:
+        return {"error": "WordPress client unavailable"}
+    try:
+        terms = client.get_search_terms(days)
+    except Exception as exc:
+        return {"error": str(exc)}
+    return {"terms": terms}
+
