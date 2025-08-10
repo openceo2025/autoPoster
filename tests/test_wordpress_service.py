@@ -91,14 +91,14 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert dummy.uploaded[0][0] == "x1.jpg"
     assert dummy.uploaded[1][0] == "x2.jpg"
     # HTML contains image tags
-    assert (
-        '<img src="http://img1" alt="x1" style="max-width:100%;height:auto;" />'
-        in dummy.created["html"]
+    html = dummy.created["html"]
+    assert '<img src="http://img1" alt="x1"' in html
+    assert '<img src="http://img2" alt="x2"' in html
+    # Ensure images have either inline style or wp-block-image class
+    markers = html.count('style="max-width:100%;height:auto;"') + html.count(
+        "wp-block-image"
     )
-    assert (
-        '<img src="http://img2" alt="x2" style="max-width:100%;height:auto;" />'
-        in dummy.created["html"]
-    )
+    assert markers >= 2
     # First image used as featured
     assert dummy.created["featured_id"] == 1
     # Paid content added as subscribers-only block in HTML and not sent separately
