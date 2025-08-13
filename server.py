@@ -14,6 +14,7 @@ from services.wordpress_stats import (
     get_post_views as service_get_post_views,
     get_search_terms as service_get_search_terms,
 )
+from services.wordpress_posts import list_posts as service_list_posts
 import os
 import tempfile
 
@@ -459,6 +460,15 @@ async def wordpress_post(data: WordpressPostRequest):
         data.tags,
     )
     return post_info
+
+
+@app.get("/wordpress/posts")
+async def wordpress_posts(
+    page: int = Query(1, gt=0),
+    number: int = Query(10, gt=0),
+    account: str | None = None,
+):
+    return service_list_posts(account, page, number)
 
 
 @app.get("/wordpress/stats/views")
