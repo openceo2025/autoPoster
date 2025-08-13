@@ -213,6 +213,69 @@ class WordpressClient:
             page += 1
         return deleted
 
+    def get_site_info(self, fields: str | None = None) -> dict:
+        """Return information about the site.
+
+        Parameters
+        ----------
+        fields: str | None
+            Optional comma-separated list of fields to include in the
+            response.
+        """
+        url = self.API_BASE.format(site=self.site)
+        params = {"fields": fields} if fields else None
+        resp: requests.Response | None = None
+        try:
+            resp = self.session.get(url, params=params)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Fetching site info failed: {exc}") from exc
+
+    def list_media(
+        self, post_id: int | None = None, page: int = 1, number: int = 100
+    ) -> list[dict]:
+        """Return media library items.
+
+        Parameters
+        ----------
+        post_id: int | None
+            If provided, filter media attached to the given post ID. Use
+            ``0`` to retrieve unattached media.
+        page: int
+            Page number to fetch.
+        number: int
+            Number of items per page (max 100).
+        """
+        url = f"{self.API_BASE.format(site=self.site)}/media"
+        params = {"page": page, "number": number}
+        if post_id is not None:
+            params["post_ID"] = post_id
+        resp: requests.Response | None = None
+        try:
+            resp = self.session.get(url, params=params)
+            resp.raise_for_status()
+            return resp.json().get("media", [])
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Fetching media failed: {exc}") from exc
+
+    def delete_media(self, media_id: int) -> int:
+        """Delete a media item by ID and return the deleted ID."""
+        url = f"{self.API_BASE.format(site=self.site)}/media/{media_id}/delete"
+        resp: requests.Response | None = None
+        try:
+            resp = self.session.post(url)
+            resp.raise_for_status()
+            return media_id
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Media deletion failed: {exc}") from exc
+
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
         url = f"{self.API_BASE.format(site=self.site)}/stats/post/{post_id}"

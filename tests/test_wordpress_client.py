@@ -102,3 +102,34 @@ def test_create_post_fallback_link(monkeypatch):
     monkeypatch.setattr(client.session, "post", fake_post)
     res = client.create_post("T", "<p>B</p>")
     assert res == {"id": 8, "link": "http://example/alt"}
+
+
+def test_get_site_info(monkeypatch):
+    client = _make_client()
+
+    def fake_get(url, params=None):
+        assert params == {"fields": "icon,logo"}
+        return DummyResp({"icon": {"img": "u"}})
+
+    monkeypatch.setattr(client.session, "get", fake_get)
+    info = client.get_site_info(fields="icon,logo")
+    assert info == {"icon": {"img": "u"}}
+
+
+def test_list_media_and_delete(monkeypatch):
+    client = _make_client()
+
+    def fake_get(url, params=None):
+        assert params == {"page": 1, "number": 100, "post_ID": 0}
+        return DummyResp({"media": [{"ID": 1}]})
+
+    def fake_post(url):
+        assert url.endswith("/media/1/delete")
+        return DummyResp({})
+
+    monkeypatch.setattr(client.session, "get", fake_get)
+    monkeypatch.setattr(client.session, "post", fake_post)
+    media = client.list_media(post_id=0)
+    assert media == [{"ID": 1}]
+    deleted = client.delete_media(1)
+    assert deleted == 1

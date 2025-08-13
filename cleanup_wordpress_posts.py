@@ -77,6 +77,37 @@ def main() -> None:
         deleted = client.empty_trash()
         print(f"Emptied trash, removed {len(deleted)} posts")
 
+    answer = input("Delete unattached media? [y/N] ").strip().lower()
+    if answer == "y":
+        info = client.get_site_info(fields="icon,logo")
+        protected: set[str] = set()
+        for key in ("icon", "logo"):
+            obj = info.get(key) or {}
+            for val in obj.values():
+                if isinstance(val, str):
+                    protected.add(val)
+
+        page = 1
+        removed = 0
+        while True:
+            media = client.list_media(post_id=0, page=page, number=100)
+            if not media:
+                break
+            for item in media:
+                url = item.get("URL")
+                if url and url in protected:
+                    continue
+                try:
+                    client.delete_media(item["ID"])
+                    removed += 1
+                    print(f"Deleted media {item['ID']}")
+                except Exception as exc:  # pragma: no cover - simple CLI error handling
+                    print(f"Failed to delete media {item['ID']}: {exc}")
+            if len(media) < 100:
+                break
+            page += 1
+        print(f"Removed {removed} unattached media items")
+
     print("Cleanup complete")
 
 
