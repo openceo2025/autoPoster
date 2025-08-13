@@ -121,6 +121,31 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Post creation failed: {exc}") from exc
 
+    def list_posts(self, page: int = 1, number: int = 10) -> list[dict]:
+        """Return recent posts with basic information."""
+        url = f"{self.API_BASE.format(site=self.site)}/posts"
+        params = {"page": page, "number": number}
+        resp: requests.Response | None = None
+        try:
+            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            posts: list[dict] = []
+            for item in data.get("posts", []):
+                posts.append(
+                    {
+                        "id": item.get("ID"),
+                        "title": item.get("title"),
+                        "date": item.get("date"),
+                        "url": item.get("URL"),
+                    }
+                )
+            return posts
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Fetching posts failed: {exc}") from exc
+
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
         url = f"{self.API_BASE.format(site=self.site)}/stats/post/{post_id}"

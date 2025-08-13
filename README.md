@@ -297,6 +297,32 @@ Sample response:
 }
 ```
 
+### `GET /wordpress/posts`
+
+List recent posts on a WordPress.com site.
+
+Query parameters:
+
+- `account`: WordPress account name from `config.json`.
+- `page`: Page number to fetch (default 1).
+- `number`: Number of posts per page (default 10).
+
+Example using `curl`:
+
+```bash
+curl "http://localhost:8765/wordpress/posts?account=account1&page=1&number=5"
+```
+
+Sample response:
+
+```json
+{
+  "posts": [
+    { "id": 1, "title": "Example", "date": "2020-01-01T00:00:00", "url": "http://post" }
+  ]
+}
+```
+
 ### `POST /note/draft`
 
 Create a draft on a configured Note account. Specify the account name in
