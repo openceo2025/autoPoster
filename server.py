@@ -345,11 +345,11 @@ def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None)
                 return {"error": f"Media upload failed: {exc}"}
 
     try:
-        client.status_post(text, media_ids=media_ids)
+        status = client.status_post(text, media_ids=media_ids)
     except Exception as exc:
         return {"error": str(exc)}
 
-    return {"posted": True}
+    return {"posted": True, "url": status["url"]}
 
 
 def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
@@ -374,11 +374,23 @@ def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
                 return {"error": f"Media upload failed: {exc}"}
 
     try:
-        client.create_tweet(text=text, media_ids=media_ids)
+        response = client.create_tweet(text=text, media_ids=media_ids)
     except Exception as exc:
         return {"error": str(exc)}
 
-    return {"posted": True}
+    tweet_id = None
+    if hasattr(response, "data") and isinstance(response.data, dict):
+        tweet_id = response.data.get("id")
+    elif isinstance(response, dict):
+        tweet_id = response.get("id") or response.get("data", {}).get("id")
+
+    try:
+        username = api.verify_credentials().screen_name
+    except Exception:
+        username = ""
+
+    url = f"https://twitter.com/{username}/status/{tweet_id}" if tweet_id and username else None
+    return {"posted": True, "url": url}
 
 
 def post_to_wordpress(

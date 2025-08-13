@@ -17,7 +17,7 @@ class DummyMastodon:
 
     def status_post(self, text, media_ids=None):
         self.posts.append({'text': text, 'media_ids': media_ids})
-        return {'id': 1}
+        return {'id': 1, 'url': 'https://mastodon.social/@user/1'}
 
     def media_post(self, data, mime_type=None):
         self.media.append(data)
@@ -71,7 +71,10 @@ def test_post_text(monkeypatch, temp_config):
     client = make_client(monkeypatch, mastodon_cls=lambda **kw: dummy)
     resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hello'})
     assert resp.status_code == 200
-    assert resp.json() == {'posted': True}
+    assert resp.json() == {
+        'posted': True,
+        'url': 'https://mastodon.social/@user/1'
+    }
     assert dummy.posts[0]['text'] == 'hello'
     assert dummy.posts[0]['media_ids'] is None
     assert dummy.media == []
@@ -83,6 +86,7 @@ def test_post_with_media(monkeypatch, temp_config):
     encoded = base64.b64encode(data).decode()
     resp = client.post('/mastodon/post', json={'account': 'acc', 'text': 'hi', 'media': [encoded]})
     assert resp.status_code == 200
+    assert 'url' in resp.json()
     assert dummy.posts[0]['text'] == 'hi'
     assert isinstance(dummy.media[0], BytesIO)
     assert dummy.media[0].read() == data

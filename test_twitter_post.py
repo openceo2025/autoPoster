@@ -13,6 +13,9 @@ class DummyAPI:
         self.media = []
         self.next_id = 1
 
+    def verify_credentials(self):
+        return type('User', (), {'screen_name': 'dummyuser'})()
+
     def media_upload(self, filename=None, file=None):
         self.media.append(file)
         mid = self.next_id
@@ -28,7 +31,7 @@ class DummyClient:
 
     def create_tweet(self, text=None, media_ids=None):
         self.tweets.append({'text': text, 'media_ids': media_ids})
-        return {'id': 1}
+        return type('Resp', (), {'data': {'id': '1'}})()
 
 
 @pytest.fixture
@@ -88,7 +91,10 @@ def test_post_text(monkeypatch, tw_temp_config):
     )
     resp = client.post('/twitter/post', json={'account': 'acc', 'text': 'hello'})
     assert resp.status_code == 200
-    assert resp.json() == {'posted': True}
+    assert resp.json() == {
+        'posted': True,
+        'url': 'https://twitter.com/dummyuser/status/1'
+    }
     assert dummy_client.tweets[0]['text'] == 'hello'
     assert dummy_client.tweets[0]['media_ids'] is None
     assert dummy_api.media == []
@@ -106,6 +112,7 @@ def test_post_with_media(monkeypatch, tw_temp_config):
     encoded = base64.b64encode(data).decode()
     resp = client.post('/twitter/post', json={'account': 'acc', 'text': 'hi', 'media': [encoded]})
     assert resp.status_code == 200
+    assert 'url' in resp.json()
     assert dummy_client.tweets[0]['text'] == 'hi'
     assert isinstance(dummy_api.media[0], BytesIO)
     assert dummy_api.media[0].read() == data
