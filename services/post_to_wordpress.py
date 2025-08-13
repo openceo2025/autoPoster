@@ -133,5 +133,8 @@ def post_to_wordpress(
         )
     except Exception as exc:
         return {"error": str(exc)}
-    post_info = {**post_info, "site": client.site}
-    return post_info
+    return {
+        "id": post_info.get("id"),
+        "link": post_info.get("link"),
+        "site": client.site,
+    }

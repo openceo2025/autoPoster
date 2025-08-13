@@ -87,7 +87,9 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
         paid_message="Msg",
         plan_id="p1",
     )
-    assert resp == {"id": 10, "link": "http://post", "site": "mysite"}
+    assert resp["id"] == 10
+    assert resp["link"] == "http://post"
+    assert resp["site"] == "mysite"
     # Uploaded both images
     assert dummy.uploaded[0][0] == "x1.jpg"
     assert dummy.uploaded[1][0] == "x2.jpg"
@@ -124,7 +126,9 @@ def test_post_to_wordpress_adds_paid_block(monkeypatch):
         paid_title="Hidden",
         paid_message="M",
     )
-    assert resp == {"id": 10, "link": "http://post", "site": "mysite"}
+    assert resp["id"] == 10
+    assert resp["link"] == "http://post"
+    assert resp["site"] == "mysite"
     assert "wp:jetpack/subscribers-only-content" in dummy.created["html"]
     assert "<h2>Hidden</h2>" in dummy.created["html"]
     assert "<p>Secret</p>" in dummy.created["html"]
@@ -144,7 +148,9 @@ def test_post_to_wordpress_without_paid_content(monkeypatch):
         "Body",
         account="acc",
     )
-    assert resp == {"id": 10, "link": "http://post", "site": "mysite"}
+    assert resp["id"] == 10
+    assert resp["link"] == "http://post"
+    assert resp["site"] == "mysite"
     assert "wp:jetpack/subscribers-only-content" not in dummy.created["html"]
     assert dummy.created["paid_content"] is None
 
@@ -160,6 +166,8 @@ def test_post_to_wordpress_categories_tags(monkeypatch):
         categories=["News", "Tech"],
         tags=["python", "fastapi"],
     )
-    assert resp == {"id": 10, "link": "http://post", "site": "mysite"}
+    assert resp["id"] == 10
+    assert resp["link"] == "http://post"
+    assert resp["site"] == "mysite"
     assert dummy.created["categories"] == ["News", "Tech"]
     assert dummy.created["tags"] == ["python", "fastapi"]

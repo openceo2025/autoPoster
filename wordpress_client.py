@@ -116,7 +116,11 @@ class WordpressClient:
             resp = self.session.post(url, json=payload)
             print(resp.status_code, resp.text)
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            return {
+                "id": data.get("ID"),
+                "link": data.get("URL") or data.get("link"),
+            }
         except Exception as exc:
             if resp is not None:
                 print(resp.status_code, resp.text)
