@@ -80,3 +80,25 @@ def test_get_search_terms_parses_views(monkeypatch):
         {"term": "foo", "views": 5},
         {"term": "bar", "views": 1},
     ]
+
+
+def test_create_post_returns_link(monkeypatch):
+    client = _make_client()
+
+    def fake_post(url, json):
+        return DummyResp({"ID": 7, "URL": "http://example/post"})
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    res = client.create_post("T", "<p>B</p>")
+    assert res == {"id": 7, "link": "http://example/post"}
+
+
+def test_create_post_fallback_link(monkeypatch):
+    client = _make_client()
+
+    def fake_post(url, json):
+        return DummyResp({"ID": 8, "link": "http://example/alt"})
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    res = client.create_post("T", "<p>B</p>")
+    assert res == {"id": 8, "link": "http://example/alt"}

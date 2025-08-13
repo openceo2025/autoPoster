@@ -37,7 +37,7 @@ def make_client(monkeypatch, config):
             return DummyResponse({"media": [{"id": 1, "source_url": "http://img"}]})
         if url.endswith("/posts/new"):
             calls["post"] = kwargs.get("json")
-            return DummyResponse({"id": 10, "link": "http://post"})
+            return DummyResponse({"ID": 10, "URL": "http://post"})
         raise AssertionError(f"Unexpected URL {url}")
 
     monkeypatch.setattr(requests, "post", fake_post)
