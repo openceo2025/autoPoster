@@ -92,8 +92,9 @@ def test_post_text(monkeypatch, tw_temp_config):
     resp = client.post('/twitter/post', json={'account': 'acc', 'text': 'hello'})
     assert resp.status_code == 200
     assert resp.json() == {
-        'posted': True,
-        'url': 'https://twitter.com/dummyuser/status/1'
+        'id': '1',
+        'link': 'https://twitter.com/dummyuser/status/1',
+        'site': 'twitter'
     }
     assert dummy_client.tweets[0]['text'] == 'hello'
     assert dummy_client.tweets[0]['media_ids'] is None
@@ -112,7 +113,11 @@ def test_post_with_media(monkeypatch, tw_temp_config):
     encoded = base64.b64encode(data).decode()
     resp = client.post('/twitter/post', json={'account': 'acc', 'text': 'hi', 'media': [encoded]})
     assert resp.status_code == 200
-    assert 'url' in resp.json()
+    assert resp.json() == {
+        'id': '1',
+        'link': 'https://twitter.com/dummyuser/status/1',
+        'site': 'twitter'
+    }
     assert dummy_client.tweets[0]['text'] == 'hi'
     assert isinstance(dummy_api.media[0], BytesIO)
     assert dummy_api.media[0].read() == data

@@ -349,7 +349,11 @@ def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None)
     except Exception as exc:
         return {"error": str(exc)}
 
-    return {"posted": True, "url": status["url"]}
+    return {
+        "id": status.get("id"),
+        "link": status.get("url"),
+        "site": "mastodon",
+    }
 
 
 def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
@@ -389,8 +393,16 @@ def post_to_twitter(account: str, text: str, media: Optional[List[str]] = None):
     except Exception:
         username = ""
 
-    url = f"https://twitter.com/{username}/status/{tweet_id}" if tweet_id and username else None
-    return {"posted": True, "url": url}
+    url = (
+        f"https://twitter.com/{username}/status/{tweet_id}"
+        if tweet_id and username
+        else None
+    )
+    return {
+        "id": tweet_id,
+        "link": url,
+        "site": "twitter",
+    }
 
 
 def post_to_wordpress(

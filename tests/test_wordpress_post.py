@@ -90,7 +90,7 @@ def test_wordpress_post_success(monkeypatch):
         },
     )
     assert resp.status_code == 200
-    assert resp.json() == {"id": 10, "link": "http://post", "site": "mysite"}
+    assert resp.json() == {"id": 10, "link": "http://post", "site": "wordpress"}
     assert len(calls["uploads"]) == 1
     filename, content = calls["uploads"][0]
     assert filename == "img.png"
