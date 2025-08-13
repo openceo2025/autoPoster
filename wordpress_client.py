@@ -112,6 +112,7 @@ class WordpressClient:
             payload["tags"] = ",".join(tags)
         resp: requests.Response | None = None
         try:
+            print(f"POST {url} payload: {payload}")
             resp = self.session.post(url, json=payload)
             print(resp.status_code, resp.text)
             resp.raise_for_status()
