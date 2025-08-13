@@ -147,6 +147,19 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Fetching posts failed: {exc}") from exc
 
+    def delete_post(self, post_id: int) -> int:
+        """Delete a post by ID and return the deleted ID."""
+        url = f"{self.API_BASE.format(site=self.site)}/posts/{post_id}/delete"
+        resp: requests.Response | None = None
+        try:
+            resp = self.session.post(url)
+            resp.raise_for_status()
+            return post_id
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Post deletion failed: {exc}") from exc
+
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
         url = f"{self.API_BASE.format(site=self.site)}/stats/post/{post_id}"
