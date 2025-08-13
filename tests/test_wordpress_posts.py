@@ -62,6 +62,19 @@ def test_client_list_posts(monkeypatch):
     ]
 
 
+def test_client_list_posts_status(monkeypatch):
+    client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
+    captured = {}
+
+    def fake_get(url, headers=None, params=None):
+        captured["params"] = params
+        return DummyResp({"posts": []})
+
+    monkeypatch.setattr(client.session, "get", fake_get)
+    client.list_posts(status="trash")
+    assert captured["params"] == {"page": 1, "number": 10, "status": "trash"}
+
+
 def test_wordpress_posts_endpoint(monkeypatch):
     captured = {}
 

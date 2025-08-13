@@ -126,10 +126,24 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Post creation failed: {exc}") from exc
 
-    def list_posts(self, page: int = 1, number: int = 10) -> list[dict]:
-        """Return recent posts with basic information."""
+    def list_posts(
+        self, page: int = 1, number: int = 10, status: str | None = None
+    ) -> list[dict]:
+        """Return posts with basic information.
+
+        Parameters
+        ----------
+        page: int
+            Page number to fetch.
+        number: int
+            Number of posts per page.
+        status: str | None
+            Optional status filter such as ``"trash"`` to list trashed posts.
+        """
         url = f"{self.API_BASE.format(site=self.site)}/posts"
         params = {"page": page, "number": number}
+        if status is not None:
+            params["status"] = status
         resp: requests.Response | None = None
         try:
             resp = self.session.get(url, headers=self.session.headers, params=params)
@@ -151,18 +165,53 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Fetching posts failed: {exc}") from exc
 
-    def delete_post(self, post_id: int) -> int:
-        """Delete a post by ID and return the deleted ID."""
+    def delete_post(self, post_id: int, permanent: bool = False) -> int:
+        """Delete a post by ID and return the deleted ID.
+
+        Parameters
+        ----------
+        post_id: int
+            ID of the post to remove.
+        permanent: bool, default False
+            If ``True`` the post is permanently deleted instead of being moved
+            to the trash.
+        """
         url = f"{self.API_BASE.format(site=self.site)}/posts/{post_id}/delete"
+        params = {"force": 1} if permanent else None
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url)
+            resp = self.session.post(url, params=params)
             resp.raise_for_status()
             return post_id
         except Exception as exc:
             if resp is not None:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Post deletion failed: {exc}") from exc
+
+    def empty_trash(self) -> list[int]:
+        """Permanently remove all posts currently in the trash.
+
+        Returns
+        -------
+        list[int]
+            IDs of posts that were successfully deleted.
+        """
+        deleted: list[int] = []
+        page = 1
+        while True:
+            items = self.list_posts(page=page, number=100, status="trash")
+            if not items:
+                break
+            for item in items:
+                try:
+                    self.delete_post(item["id"], permanent=True)
+                    deleted.append(item["id"])
+                except Exception:
+                    continue
+            if len(items) < 100:
+                break
+            page += 1
+        return deleted
 
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
