@@ -28,8 +28,9 @@ def test_client_delete_post(monkeypatch):
     client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
     captured = {}
 
-    def fake_post(url):
+    def fake_post(url, params=None):
         captured["url"] = url
+        captured["params"] = params
         return DummyResp({"ID": 5})
 
     monkeypatch.setattr(client.session, "post", fake_post)
@@ -38,7 +39,27 @@ def test_client_delete_post(monkeypatch):
         captured["url"]
         == "https://public-api.wordpress.com/rest/v1.1/sites/mysite/posts/5/delete"
     )
+    assert captured["params"] is None
     assert deleted == 5
+
+
+def test_client_delete_post_force(monkeypatch):
+    client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
+    captured = {}
+
+    def fake_post(url, params=None):
+        captured["url"] = url
+        captured["params"] = params
+        return DummyResp({"ID": 9})
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    deleted = client.delete_post(9, permanent=True)
+    assert (
+        captured["url"]
+        == "https://public-api.wordpress.com/rest/v1.1/sites/mysite/posts/9/delete"
+    )
+    assert captured["params"] == {"force": 1}
+    assert deleted == 9
 
 
 def test_service_delete_posts(monkeypatch):
@@ -81,3 +102,26 @@ def test_delete_posts_endpoint(monkeypatch):
     assert resp.status_code == 200
     assert resp.json() == {"deleted": [1, 2], "errors": {}, "success": 2, "failed": 0}
     assert dummy.deleted == [1, 2]
+
+
+def test_client_empty_trash(monkeypatch):
+    client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
+    calls = {"list": [], "deleted": []}
+
+    def fake_list_posts(page=1, number=100, status=None):
+        calls["list"].append({"page": page, "number": number, "status": status})
+        # Return some trashed posts on first call, then empty list to stop
+        if not calls["deleted"]:
+            return [{"id": 1}, {"id": 2}]
+        return []
+
+    def fake_delete_post(pid, permanent=False):
+        calls["deleted"].append({"id": pid, "permanent": permanent})
+        return pid
+
+    monkeypatch.setattr(client, "list_posts", fake_list_posts)
+    monkeypatch.setattr(client, "delete_post", fake_delete_post)
+    res = client.empty_trash()
+    assert calls["list"] == [{"page": 1, "number": 100, "status": "trash"}]
+    assert calls["deleted"] == [{"id": 1, "permanent": True}, {"id": 2, "permanent": True}]
+    assert res == [1, 2]

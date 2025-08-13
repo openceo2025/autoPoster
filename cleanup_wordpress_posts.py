@@ -72,6 +72,11 @@ def main() -> None:
         except Exception as exc:  # pragma: no cover
             print(f"Failed to delete post {p['id']}: {exc}")
 
+    answer = input("Empty trash permanently? [y/N] ").strip().lower()
+    if answer == "y":
+        deleted = client.empty_trash()
+        print(f"Emptied trash, removed {len(deleted)} posts")
+
     print("Cleanup complete")
 
 
