@@ -71,4 +71,8 @@ def post_to_note(content: str, images: List[Path] = [], account: str | None = No
     except Exception as exc:
         return {"error": str(exc)}
 
-    return draft_info
+    return {
+        "id": draft_info.get("note_id"),
+        "link": draft_info.get("draft_url"),
+        "site": "note",
+    }

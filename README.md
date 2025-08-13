@@ -99,6 +99,12 @@ A simple REST API that receives post requests and forwards them to various servi
 
 ## API
 
+All endpoints that publish content return a JSON object in the following format on success:
+
+```json
+{ "id": 1, "link": "https://example.com/post/1", "site": "service" }
+```
+
 ### `POST /post`
 
 Send JSON with the following structure:
@@ -144,6 +150,12 @@ curl -X POST http://localhost:8765/mastodon/post \
      -d '{"account": "account1", "text": "Hello world", "media": ["b64"]}'
 ```
 
+Sample response:
+
+```json
+{ "id": 1, "link": "https://mastodon.example/@user/1", "site": "mastodon" }
+```
+
 ### `POST /twitter/post`
 
 Send a tweet from one of the configured Twitter accounts. The JSON payload must
@@ -170,6 +182,12 @@ Example using `curl`:
          -H 'Content-Type: application/json' \
          -d '{"account": "account1", "text": "Hello Twitter", "media": ["b64"]}'
   ```
+
+Sample response:
+
+```json
+{ "id": "123", "link": "https://twitter.com/user/status/123", "site": "twitter" }
+```
 
 ### `POST /wordpress/post`
 
@@ -239,11 +257,11 @@ Sample response:
 {
   "id": 10,
   "link": "http://post",
-  "site": "your-site.wordpress.com"
+  "site": "wordpress"
 }
 ```
 
-Clients should store the `{site, id}` pair for Stats API calls.
+All services respond using this common `{id, link, site}` format.
 
 If the site does not have a plan that supports Premium Content, WordPress.com
 returns an error and the API responds with a message such as `{"error":
@@ -373,6 +391,12 @@ Example using `curl`:
 curl -X POST http://localhost:8765/note/draft \
      -H 'Content-Type: application/json' \
      -d '{"account": "default", "content": "Hello Note", "images": ["example/test.png"]}'
+```
+
+Sample response:
+
+```json
+{ "id": 5, "link": "https://note.com/.../draft", "site": "note" }
 ```
 
 ## Troubleshooting

@@ -136,5 +136,5 @@ def post_to_wordpress(
     return {
         "id": post_info.get("id"),
         "link": post_info.get("link"),
-        "site": client.site,
+        "site": "wordpress",
     }
