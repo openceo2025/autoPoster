@@ -14,7 +14,10 @@ from services.wordpress_stats import (
     get_post_views as service_get_post_views,
     get_search_terms as service_get_search_terms,
 )
-from services.wordpress_posts import list_posts as service_list_posts
+from services.wordpress_posts import (
+    list_posts as service_list_posts,
+    delete_posts as service_delete_posts,
+)
 import os
 import tempfile
 
@@ -482,6 +485,17 @@ async def wordpress_posts(
     account: str | None = None,
 ):
     return service_list_posts(account, page, number)
+
+
+@app.delete("/wordpress/posts")
+async def wordpress_delete_posts(
+    ids: List[int] = Query(...),
+    account: str | None = None,
+):
+    result = service_delete_posts(account, ids)
+    success = len(result.get("deleted", []))
+    failed = len(result.get("errors", {}))
+    return {**result, "success": success, "failed": failed}
 
 
 @app.get("/wordpress/stats/views")

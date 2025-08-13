@@ -323,6 +323,34 @@ Sample response:
 }
 ```
 
+### `DELETE /wordpress/posts`
+
+Delete multiple posts on WordPress.com by ID.
+
+Query parameters:
+
+- `account`: WordPress account name from `config.json`.
+- `ids`: One or more post IDs to delete. Specify `ids` multiple times in the query string.
+
+Example using `curl`:
+
+```bash
+curl -X DELETE "http://localhost:8765/wordpress/posts?account=account1&ids=1&ids=2"
+```
+
+Sample response:
+
+```json
+{
+  "deleted": [1, 2],
+  "errors": {},
+  "success": 2,
+  "failed": 0
+}
+```
+
+If an individual deletion fails, the `errors` object maps the post ID to an error message and the `failed` count is incremented.
+
 ### `POST /note/draft`
 
 Create a draft on a configured Note account. Specify the account name in
