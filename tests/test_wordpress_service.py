@@ -171,3 +171,28 @@ def test_post_to_wordpress_categories_tags(monkeypatch):
     assert resp["site"] == "wordpress"
     assert dummy.created["categories"] == ["News", "Tech"]
     assert dummy.created["tags"] == ["python", "fastapi"]
+
+
+def test_post_to_wordpress_skips_image_without_url(monkeypatch, tmp_path):
+    """No <img> tag should be added when upload provides no URL."""
+
+    class DummyNoURLClient(DummyClient):
+        def upload_media(self, content, filename):
+            self.uploaded.append((filename, content))
+            return {"id": 1}  # no URL returned
+
+    dummy = DummyNoURLClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"123")
+
+    resp = wp_service.post_to_wordpress(
+        "Title", "Body", [(img, "x.jpg")], account="acc"
+    )
+
+    assert resp["id"] == 10
+    assert resp["link"] == "http://post"
+    html = dummy.created["html"]
+    assert "<img" not in html
+    assert dummy.created["featured_id"] is None
