@@ -311,6 +311,7 @@ class NotePostRequest(BaseModel):
 class WordpressMediaItem(BaseModel):
     filename: str
     data: str
+    alt: Optional[str] = None
 
 
 class WordpressPostRequest(BaseModel):
@@ -423,7 +424,7 @@ def post_to_wordpress(
     if not client:
         return {"error": "Account not configured"}
 
-    images: List[tuple[Path, str]] = []
+    images: List[tuple[Path, str, Optional[str]]] = []
     if media:
         for item in media:
             try:
@@ -434,9 +435,9 @@ def post_to_wordpress(
                 tmp.write(data)
                 tmp.flush()
                 tmp.close()
-                images.append((Path(tmp.name), item.filename))
+                images.append((Path(tmp.name), item.filename, item.alt))
             except Exception as exc:
-                for p, _ in images:
+                for p, _, _ in images:
                     try:
                         os.unlink(p)
                     except Exception:
@@ -457,7 +458,7 @@ def post_to_wordpress(
             tags=tags,
         )
     finally:
-        for p, _ in images:
+        for p, _, _ in images:
             try:
                 os.unlink(p)
             except Exception:

@@ -85,7 +85,7 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     resp = wp_service.post_to_wordpress(
         "Title",
         "Body",
-        [(img1, "x1.jpg"), (img2, "x2.jpg")],
+        [(img1, "x1.jpg", "alt1"), (img2, "x2.jpg", "alt2")],
         account="acc",
         paid_content="Paid",
         paid_title="PTitle",
@@ -99,11 +99,11 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert dummy.uploaded[0][0] == "x1.jpg"
     assert dummy.uploaded[1][0] == "x2.jpg"
     # Alt text updated for each image
-    assert dummy.updated_alt_text == [(1, "x1"), (2, "x2")]
+    assert dummy.updated_alt_text == [(1, "alt1"), (2, "alt2")]
     # HTML contains image tags
     html = dummy.created["html"]
-    assert '<img src="http://img1" alt="x1"' in html
-    assert '<img src="http://img2" alt="x2"' in html
+    assert '<img src="http://img1" alt="alt1"' in html
+    assert '<img src="http://img2" alt="alt2"' in html
     # Ensure images have either inline style or wp-block-image class
     markers = html.count('style="max-width:100%;height:auto;"') + html.count(
         "wp-block-image"
@@ -195,7 +195,7 @@ def test_post_to_wordpress_skips_image_without_url(monkeypatch, tmp_path):
     img.write_bytes(b"123")
 
     resp = wp_service.post_to_wordpress(
-        "Title", "Body", [(img, "x.jpg")], account="acc"
+        "Title", "Body", [(img, "x.jpg", "alt")], account="acc"
     )
 
     assert resp["id"] == 10
@@ -218,11 +218,11 @@ def test_post_to_wordpress_warns_on_alt_update_failure(monkeypatch, tmp_path, ca
 
     with caplog.at_level("WARNING"):
         resp = wp_service.post_to_wordpress(
-            "Title", "Body", [(img, "x.jpg")], account="acc"
+            "Title", "Body", [(img, "x.jpg", "custom")], account="acc"
         )
     assert resp["id"] == 10
     assert resp["link"] == "http://post"
     assert "Failed to update alt text" in caplog.text
     # Alt text still used in HTML
     html = dummy.created["html"]
-    assert '<img src="http://img1" alt="x"' in html
+    assert '<img src="http://img1" alt="custom"' in html
