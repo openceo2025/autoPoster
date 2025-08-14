@@ -2,6 +2,12 @@
 
 A simple REST API that receives post requests and forwards them to various services.
 
+### Recent features
+
+- Accepts ALT text for images and stores it in the WordPress media library.
+- Supports post `slug` and `excerpt` fields for better SEO control.
+- Appends custom or auto‑generated JSON‑LD structured data to WordPress posts.
+
 ## Setup
 
 1. Copy `config.sample.json` to `config.json` and fill in your account details.
@@ -193,17 +199,34 @@ Sample response:
 
 Create and publish a post on WordPress.com. The JSON body must specify the
 target `account` (matching `wordpress.accounts` in `config.json`), a `title`,
-and `content`. Optionally include `media`, a list of base64‑encoded images. Each
-image is uploaded and inserted into the post body; the first uploaded image is
-also set as the featured image (アイキャッチ). Ensure your files are within
-WordPress's upload limits and in supported formats such as PNG or JPEG.
+and `content`.
+
+Optional fields:
+
+- `slug`: Permalink slug used for the post URL.
+- `excerpt`: Short summary or description.
+- `media`: list of image objects with `filename`, base64‑encoded `data`, and
+  optional `alt` text. Images are uploaded and inserted into the post body; the
+  first image becomes the featured image (アイキャッチ). When provided, ALT text is
+  saved to the WordPress media library.
+- `json_ld`: Structured data appended to the post body as a `<script
+  type="application/ld+json">` block. When omitted, a basic object is generated
+  from the title and content.
+
+Ensure your files are within WordPress's upload limits and in supported formats
+such as PNG or JPEG.
 
 ```json
 {
   "account": "account1",
   "title": "Hello WP",
   "content": "Article body",
-  "media": ["base64image"]
+  "slug": "hello-wp",
+  "excerpt": "Short summary",
+  "media": [
+    { "filename": "img.png", "data": "base64image", "alt": "Alt text" }
+  ],
+  "json_ld": { "@type": "NewsArticle" }
 }
 ```
 
@@ -212,7 +235,7 @@ Example using `curl`:
 ```bash
 curl -X POST http://localhost:8765/wordpress/post \
      -H 'Content-Type: application/json' \
-     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "media": ["b64"]}'
+     -d '{"account": "account1", "title": "Hello WP", "content": "Article body", "media": [{"filename": "img.png", "data": "b64", "alt": "Alt text"}]}'
 ```
 
 #### Premium content (`paid_content`)
