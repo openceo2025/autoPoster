@@ -133,3 +133,15 @@ def test_list_media_and_delete(monkeypatch):
     assert media == [{"ID": 1}]
     deleted = client.delete_media(1)
     assert deleted == 1
+
+def test_update_media_alt_text(monkeypatch):
+    client = _make_client()
+
+    def fake_post(url, json):
+        assert url.endswith("/media/5")
+        assert json == {"alt_text": "New alt"}
+        return DummyResp({"id": 5, "alt_text": "New alt"})
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    res = client.update_media_alt_text(5, "New alt")
+    assert res == {"id": 5, "alt_text": "New alt"}
