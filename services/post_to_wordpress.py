@@ -1,7 +1,10 @@
 import json
+import logging
 from pathlib import Path
 
 from wordpress_client import WordpressClient
+
+logger = logging.getLogger(__name__)
 
 CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.json"
 
@@ -111,12 +114,20 @@ def post_to_wordpress(
             print(f"No URL returned for {img_path}, skipping image tag")
             continue
         alt_text = uploaded.get("alt") or uploaded.get("title") or Path(filename).stem
+        media_id = uploaded.get("id")
+        try:
+            if media_id is not None:
+                client.update_media_alt_text(media_id, alt_text)
+        except Exception as exc:
+            logger.warning(
+                "Failed to update alt text for media %s: %s", media_id, exc
+            )
         body += (
             f'<img src="{url}" alt="{alt_text}" '
             'style="max-width:100%;height:auto;" />'
         )
         if featured_id is None:
-            featured_id = uploaded.get("id")
+            featured_id = media_id
 
     if paid_content:
         # Determine plan to use: request override or client default
