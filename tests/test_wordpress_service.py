@@ -11,6 +11,7 @@ class DummyClient:
         self.authenticated = False
         self.uploaded = []
         self.created = None
+        self.updated_alt_text = []
         info = (
             config.get("wordpress", {})
             .get("accounts", {})
@@ -45,6 +46,10 @@ class DummyClient:
             "tags": tags,
         }
         return {"id": 10, "link": "http://post"}
+
+    def update_media_alt_text(self, media_id, alt_text):
+        self.updated_alt_text.append((media_id, alt_text))
+        return {"id": media_id, "alt_text": alt_text}
 
 
 def test_create_wp_client_select_account(monkeypatch):
@@ -93,6 +98,8 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     # Uploaded both images
     assert dummy.uploaded[0][0] == "x1.jpg"
     assert dummy.uploaded[1][0] == "x2.jpg"
+    # Alt text updated for each image
+    assert dummy.updated_alt_text == [(1, "x1"), (2, "x2")]
     # HTML contains image tags
     html = dummy.created["html"]
     assert '<img src="http://img1" alt="x1"' in html
@@ -196,3 +203,26 @@ def test_post_to_wordpress_skips_image_without_url(monkeypatch, tmp_path):
     html = dummy.created["html"]
     assert "<img" not in html
     assert dummy.created["featured_id"] is None
+
+
+def test_post_to_wordpress_warns_on_alt_update_failure(monkeypatch, tmp_path, caplog):
+    class DummyFailClient(DummyClient):
+        def update_media_alt_text(self, media_id, alt_text):
+            raise Exception("alt update boom")
+
+    dummy = DummyFailClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"123")
+
+    with caplog.at_level("WARNING"):
+        resp = wp_service.post_to_wordpress(
+            "Title", "Body", [(img, "x.jpg")], account="acc"
+        )
+    assert resp["id"] == 10
+    assert resp["link"] == "http://post"
+    assert "Failed to update alt text" in caplog.text
+    # Alt text still used in HTML
+    html = dummy.created["html"]
+    assert '<img src="http://img1" alt="x"' in html
