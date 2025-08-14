@@ -247,3 +247,16 @@ def test_post_to_wordpress_warns_on_alt_update_failure(monkeypatch, tmp_path, ca
     # Alt text still used in HTML
     html = dummy.created["html"]
     assert '<img src="http://img1" alt="custom"' in html
+
+
+def test_post_to_wordpress_appends_json_ld(monkeypatch):
+    dummy = DummyClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    resp = wp_service.post_to_wordpress(
+        "Title", "Body", account="acc", json_ld={"@type": "NewsArticle"}
+    )
+    assert resp["id"] == 10
+    html = dummy.created["html"]
+    assert '<script type="application/ld+json">' in html
+    assert '"@type": "NewsArticle"' in html

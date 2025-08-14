@@ -187,6 +187,36 @@ def test_wordpress_post_paid_block(monkeypatch):
     assert "paid_content" not in payload
 
 
+def test_wordpress_post_json_ld(monkeypatch):
+    cfg = {
+        "wordpress": {
+            "accounts": {
+                "acc": {
+                    "site": "mysite",
+                    "client_id": "id",
+                    "client_secret": "sec",
+                    "username": "user",
+                    "password": "pwd",
+                }
+            }
+        }
+    }
+    client, calls = make_client(monkeypatch, cfg)
+    resp = client.post(
+        "/wordpress/post",
+        json={
+            "account": "acc",
+            "title": "T",
+            "content": "C",
+            "json_ld": {"@type": "NewsArticle"},
+        },
+    )
+    assert resp.status_code == 200
+    payload = calls["post"]
+    assert '<script type="application/ld+json">' in payload["content"]
+    assert '"@type": "NewsArticle"' in payload["content"]
+
+
 def test_wordpress_post_misconfigured(monkeypatch):
     cfg = {
         "wordpress": {
