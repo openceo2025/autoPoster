@@ -98,6 +98,7 @@ class WordpressClient:
         paid_content: str | None = None,
         categories: list[str] | None = None,
         tags: list[str] | None = None,
+        slug: str | None = None,
     ) -> dict:
         """Create and publish a post with optional featured image."""
         url = f"{self.API_BASE.format(site=self.site)}/posts/new"
@@ -110,6 +111,8 @@ class WordpressClient:
             payload["categories"] = ",".join(categories)
         if tags:
             payload["tags"] = ",".join(tags)
+        if slug:
+            payload["slug"] = slug
         resp: requests.Response | None = None
         try:
             print(f"POST {url} payload: {payload}")
