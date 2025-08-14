@@ -37,6 +37,7 @@ class DummyClient:
         categories=None,
         tags=None,
         slug=None,
+        excerpt=None,
     ):
         self.created = {
             "title": title,
@@ -46,6 +47,7 @@ class DummyClient:
             "categories": categories,
             "tags": tags,
             "slug": slug,
+            "excerpt": excerpt,
         }
         return {"id": 10, "link": "http://post"}
 
@@ -94,6 +96,7 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
         paid_message="Msg",
         plan_id="p1",
         slug="slug-post",
+        excerpt="Short",
     )
     assert resp["id"] == 10
     assert resp["link"] == "http://post"
@@ -115,6 +118,7 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     # First image used as featured
     assert dummy.created["featured_id"] == 1
     assert dummy.created["slug"] == "slug-post"
+    assert dummy.created["excerpt"] == "Short"
     # Paid content added as subscribers-only block in HTML and not sent separately
     assert "wp:jetpack/subscribers-only-content" in dummy.created["html"]
     assert "<h2>PTitle</h2>" in dummy.created["html"]

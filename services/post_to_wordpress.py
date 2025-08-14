@@ -87,6 +87,7 @@ def post_to_wordpress(
     categories: list[str] | None = None,
     tags: list[str] | None = None,
     slug: str | None = None,
+    excerpt: str | None = None,
 ) -> dict:
     """Create a WordPress post with optional images."""
     client = WP_CLIENT if account is None else create_wp_client(account)
@@ -148,6 +149,7 @@ def post_to_wordpress(
             categories=categories,
             tags=tags,
             slug=slug,
+            excerpt=excerpt,
         )
     except Exception as exc:
         return {"error": str(exc)}
