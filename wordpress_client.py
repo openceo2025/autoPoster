@@ -263,6 +263,22 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Fetching media failed: {exc}") from exc
 
+    def update_media_alt_text(self, media_id: int, alt_text: str) -> dict:
+        """Update the alt text for a media item."""
+        url = f"{self.API_BASE.format(site=self.site)}/media/{media_id}"
+        payload = {"alt_text": alt_text}
+        resp: requests.Response | None = None
+        try:
+            resp = self.session.post(url, json=payload)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(
+                f"Updating media alt text failed: {exc}"
+            ) from exc
+
     def delete_media(self, media_id: int) -> int:
         """Delete a media item by ID and return the deleted ID."""
         url = f"{self.API_BASE.format(site=self.site)}/media/{media_id}/delete"
