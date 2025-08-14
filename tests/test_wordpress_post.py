@@ -85,6 +85,7 @@ def test_wordpress_post_success(monkeypatch):
             "account": "acc",
             "title": "T",
             "content": "C",
+            "excerpt": "E",
             "slug": "my-slug",
             "media": [{"filename": "img.png", "data": encoded, "alt": "ALT"}],
             "paid_content": "Paid",
@@ -106,6 +107,7 @@ def test_wordpress_post_success(monkeypatch):
     assert 'alt="ALT"' in payload["content"]
     assert payload["title"] == "T"
     assert payload["slug"] == "my-slug"
+    assert payload["excerpt"] == "E"
     assert "wp:jetpack/subscribers-only-content" in payload["content"]
     assert "<h2>PT</h2>" in payload["content"]
     assert "<p>Paid</p>" in payload["content"]

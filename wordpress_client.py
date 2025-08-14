@@ -99,6 +99,7 @@ class WordpressClient:
         categories: list[str] | None = None,
         tags: list[str] | None = None,
         slug: str | None = None,
+        excerpt: str | None = None,
     ) -> dict:
         """Create and publish a post with optional featured image."""
         url = f"{self.API_BASE.format(site=self.site)}/posts/new"
@@ -113,6 +114,8 @@ class WordpressClient:
             payload["tags"] = ",".join(tags)
         if slug:
             payload["slug"] = slug
+        if excerpt:
+            payload["excerpt"] = excerpt
         resp: requests.Response | None = None
         try:
             print(f"POST {url} payload: {payload}")

@@ -50,6 +50,7 @@ def test_endpoints_return_common_format(monkeypatch):
         categories=None,
         tags=None,
         slug=None,
+        excerpt=None,
     ):
         return {"id": 3, "link": "http://wp/3", "site": "wordpress"}
 

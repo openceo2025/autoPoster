@@ -106,6 +106,21 @@ def test_create_post_fallback_link(monkeypatch):
     assert res == {"id": 8, "link": "http://example/alt"}
 
 
+def test_create_post_with_excerpt(monkeypatch):
+    client = _make_client()
+
+    captured = {}
+
+    def fake_post(url, json):
+        captured["payload"] = json
+        return DummyResp({"ID": 9, "URL": "http://example/post"})
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    res = client.create_post("T", "<p>B</p>", excerpt="Short")
+    assert res == {"id": 9, "link": "http://example/post"}
+    assert captured["payload"]["excerpt"] == "Short"
+
+
 def test_get_site_info(monkeypatch):
     client = _make_client()
 
