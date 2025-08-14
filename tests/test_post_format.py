@@ -39,16 +39,17 @@ def test_endpoints_return_common_format(monkeypatch):
     monkeypatch.setattr(server, "WORDPRESS_CLIENTS", {"acc": object()}, raising=False)
 
     def fake_wp_post(
-        account,
         title,
         content,
-        media=None,
+        images=None,
+        account=None,
         paid_content=None,
         paid_title=None,
         paid_message=None,
         plan_id=None,
         categories=None,
         tags=None,
+        slug=None,
     ):
         return {"id": 3, "link": "http://wp/3", "site": "wordpress"}
 

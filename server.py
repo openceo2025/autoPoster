@@ -318,6 +318,7 @@ class WordpressPostRequest(BaseModel):
     account: str
     title: str
     content: str
+    slug: Optional[str] = None
     media: Optional[List[WordpressMediaItem]] = None
     paid_content: Optional[str] = None
     paid_title: Optional[str] = None
@@ -410,6 +411,7 @@ def post_to_wordpress(
     account: str,
     title: str,
     content: str,
+    slug: Optional[str] = None,
     media: Optional[List[WordpressMediaItem]] = None,
     paid_content: Optional[str] = None,
     paid_title: Optional[str] = None,
@@ -456,6 +458,7 @@ def post_to_wordpress(
             plan_id=plan_id,
             categories=categories,
             tags=tags,
+            slug=slug,
         )
     finally:
         for p, _, _ in images:
@@ -492,13 +495,14 @@ async def wordpress_post(data: WordpressPostRequest):
         data.account,
         data.title,
         data.content,
-        data.media,
-        data.paid_content,
-        data.paid_title,
-        data.paid_message,
-        data.plan_id,
-        data.categories,
-        data.tags,
+        slug=data.slug,
+        media=data.media,
+        paid_content=data.paid_content,
+        paid_title=data.paid_title,
+        paid_message=data.paid_message,
+        plan_id=data.plan_id,
+        categories=data.categories,
+        tags=data.tags,
     )
     return post_info
 
