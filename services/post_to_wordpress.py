@@ -75,6 +75,21 @@ def build_paid_block(
     return block
 
 
+def generate_json_ld(title: str, content: str) -> dict:
+    """Generate a basic JSON-LD structure for the post.
+
+    This helper provides a minimal `Article` schema using the supplied
+    title and content. Callers may supply their own ``json_ld`` when they
+    need more control.
+    """
+    return {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": title,
+        "articleBody": content,
+    }
+
+
 def post_to_wordpress(
     title: str,
     content: str,
@@ -88,6 +103,7 @@ def post_to_wordpress(
     tags: list[str] | None = None,
     slug: str | None = None,
     excerpt: str | None = None,
+    json_ld: dict | None = None,
 ) -> dict:
     """Create a WordPress post with optional images."""
     client = WP_CLIENT if account is None else create_wp_client(account)
@@ -140,6 +156,16 @@ def post_to_wordpress(
         # Determine plan to use: request override or client default
         plan = plan_id or getattr(client, "plan_id", None)
         body += build_paid_block(plan, paid_title, paid_message, paid_content)
+
+    # Append JSON-LD structured data if available; auto-generate when not
+    if json_ld is None:
+        json_ld = generate_json_ld(title, content)
+    if json_ld:
+        body += (
+            '<script type="application/ld+json">'
+            f"{json.dumps(json_ld, ensure_ascii=False)}"
+            "</script>"
+        )
 
     try:
         post_info = client.create_post(

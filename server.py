@@ -327,6 +327,7 @@ class WordpressPostRequest(BaseModel):
     plan_id: Optional[str] = None
     categories: Optional[List[str]] = None
     tags: Optional[List[str]] = None
+    json_ld: Optional[dict] = None
 
 
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
@@ -421,6 +422,7 @@ def post_to_wordpress(
     plan_id: Optional[str] = None,
     categories: Optional[List[str]] = None,
     tags: Optional[List[str]] = None,
+    json_ld: Optional[dict] = None,
 ):
     if account in WORDPRESS_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
@@ -462,6 +464,7 @@ def post_to_wordpress(
             tags=tags,
             slug=slug,
             excerpt=excerpt,
+            json_ld=json_ld,
         )
     finally:
         for p, _, _ in images:
@@ -507,6 +510,7 @@ async def wordpress_post(data: WordpressPostRequest):
         plan_id=data.plan_id,
         categories=data.categories,
         tags=data.tags,
+        json_ld=data.json_ld,
     )
     return post_info
 
