@@ -27,7 +27,7 @@ class DummyResponse:
 
 def make_client(monkeypatch, config):
     """Setup server with given config and patch requests.post."""
-    calls = {"uploads": [], "post": None}
+    calls = {"uploads": [], "post": None, "alt_updates": []}
 
     def fake_post(url, *args, **kwargs):
         if url.endswith("oauth2/token"):
@@ -35,6 +35,9 @@ def make_client(monkeypatch, config):
         if url.endswith("/media/new"):
             calls["uploads"].append(kwargs["files"]["media[]"])
             return DummyResponse({"media": [{"id": 1, "source_url": "http://img"}]})
+        if "/media/1" in url:
+            calls["alt_updates"].append(kwargs.get("json"))
+            return DummyResponse({"id": 1, **(kwargs.get("json") or {})})
         if url.endswith("/posts/new"):
             calls["post"] = kwargs.get("json")
             return DummyResponse({"ID": 10, "URL": "http://post"})
@@ -82,7 +85,7 @@ def test_wordpress_post_success(monkeypatch):
             "account": "acc",
             "title": "T",
             "content": "C",
-            "media": [{"filename": "img.png", "data": encoded}],
+            "media": [{"filename": "img.png", "data": encoded, "alt": "ALT"}],
             "paid_content": "Paid",
             "paid_title": "PT",
             "paid_message": "Msg",
@@ -98,6 +101,8 @@ def test_wordpress_post_success(monkeypatch):
     payload = calls["post"]
     assert payload["featured_image"] == 1
     assert "http://img" in payload["content"]
+    assert calls["alt_updates"][0]["alt_text"] == "ALT"
+    assert 'alt="ALT"' in payload["content"]
     assert payload["title"] == "T"
     assert "wp:jetpack/subscribers-only-content" in payload["content"]
     assert "<h2>PT</h2>" in payload["content"]

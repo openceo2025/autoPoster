@@ -78,7 +78,7 @@ def build_paid_block(
 def post_to_wordpress(
     title: str,
     content: str,
-    images: list[tuple[Path, str]] | None = None,
+    images: list[tuple[Path, str, str | None]] | None = None,
     account: str | None = None,
     paid_content: str | None = None,
     paid_title: str | None = None,
@@ -96,7 +96,12 @@ def post_to_wordpress(
     body = f"<p>{content}</p>"
     featured_id = None
     images = images or []
-    for img_path, filename in images:
+    for item in images:
+        if len(item) == 3:
+            img_path, filename, alt = item
+        else:
+            img_path, filename = item  # type: ignore[misc]
+            alt = None
         if not img_path.exists():
             return {"error": f"Image file not found: {img_path}"}
         try:
@@ -113,7 +118,7 @@ def post_to_wordpress(
         if not url:
             print(f"No URL returned for {img_path}, skipping image tag")
             continue
-        alt_text = uploaded.get("alt") or uploaded.get("title") or Path(filename).stem
+        alt_text = alt or uploaded.get("alt") or uploaded.get("title") or Path(filename).stem
         media_id = uploaded.get("id")
         try:
             if media_id is not None:
