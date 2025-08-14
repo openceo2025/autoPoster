@@ -121,6 +121,19 @@ def test_post_to_wordpress_uploads_and_creates(monkeypatch, tmp_path):
     assert dummy.created["paid_content"] is None
 
 
+def test_post_to_wordpress_calls_update_media_alt_text(monkeypatch, tmp_path):
+    dummy = DummyClient({})
+    monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
+
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"123")
+
+    wp_service.post_to_wordpress(
+        "Title", "Body", [(img, "x.jpg", "custom alt")], account="acc"
+    )
+    assert dummy.updated_alt_text == [(1, "custom alt")]
+
+
 def test_post_to_wordpress_adds_paid_block(monkeypatch):
     dummy = DummyClient({"wordpress": {"accounts": {"default": {"plan_id": "cfg"}}}})
     monkeypatch.setattr(wp_service, "create_wp_client", lambda account=None: dummy)
