@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from wordpress_client import WordpressClient
@@ -145,3 +147,14 @@ def test_update_media_alt_text(monkeypatch):
     monkeypatch.setattr(client.session, "post", fake_post)
     res = client.update_media_alt_text(5, "New alt")
     assert res == {"id": 5, "alt_text": "New alt"}
+
+
+def test_update_media_alt_text_error(monkeypatch):
+    client = _make_client()
+
+    def fake_post(url, json):
+        raise Exception("fail")
+
+    monkeypatch.setattr(client.session, "post", fake_post)
+    with pytest.raises(RuntimeError):
+        client.update_media_alt_text(5, "alt")
