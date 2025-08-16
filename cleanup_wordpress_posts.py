@@ -79,12 +79,16 @@ def main() -> None:
             if not media:
                 print("Processed 0 items")
                 break
-            for item in media:
+            for idx, item in enumerate(media):
                 url = item.get("URL")
                 if url and url in protected:
                     continue
                 try:
+                    print(
+                        f"Deleting media {idx + 1}/{len(media)}: {item['ID']}"
+                    )
                     client.delete_media(item["ID"])
+                    print("done", flush=True)
                     removed_media += 1
                 except Exception as exc:  # pragma: no cover - simple CLI error handling
                     print(f"Failed to delete media {item['ID']}: {exc}")
