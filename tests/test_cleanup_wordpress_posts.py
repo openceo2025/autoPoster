@@ -80,12 +80,16 @@ def test_cleanup_wordpress_posts(tmp_path):
     c1.delete_post.assert_called_once_with(1)
     c1.empty_trash.assert_called_once()
     assert c1.list_media.call_count == 2
-    c1.list_media.assert_called_with(post_id=0, page=1, number=2)
+    c1.list_media.assert_called_with(
+        post_id=0, page=1, number=2, fields="ID,URL"
+    )
     c1.delete_media.assert_called_once_with(12)
 
     c2.list_posts.assert_called_once_with(page=1, number=100)
     c2.delete_post.assert_not_called()
     c2.empty_trash.assert_not_called()
     assert c2.list_media.call_count == 2
-    c2.list_media.assert_called_with(post_id=0, page=1, number=2)
+    c2.list_media.assert_called_with(
+        post_id=0, page=1, number=2, fields="ID,URL"
+    )
     c2.delete_media.assert_called_once_with(22)
