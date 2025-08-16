@@ -7,58 +7,78 @@ from wordpress_client import WordpressClient
 CONFIG_PATH = Path("config.json")
 
 
+def load_config(account_key: str) -> dict[str, Any]:
+    """Load configuration for the specified account.
+
+    Parameters
+    ----------
+    account_key: str
+        Key of the WordPress account as defined in ``config.json``.
+    """
+    with CONFIG_PATH.open() as f:
+        cfg = json.load(f)
+    accounts = cfg.get("wordpress", {}).get("accounts", {})
+    acct_cfg = accounts.get(account_key)
+    if not acct_cfg:
+        raise ValueError(f"Account '{account_key}' not found in config")
+    return {"wordpress": {"accounts": {"default": acct_cfg}}}
+
+
 def main() -> None:
+    account = input("Enter WordPress account identifier: ").strip()
     try:
-        max_count = int(input("最大投稿数: ").strip())
-    except ValueError:  # pragma: no cover - simple CLI error handling
+        config = load_config(account)
+    except Exception as exc:  # pragma: no cover - simple CLI error handling
+        print(exc)
+        return
+
+    client = WordpressClient(config)
+    try:
+        client.authenticate()
+    except Exception as exc:  # pragma: no cover
+        print(f"Authentication failed: {exc}")
+        return
+
+    posts: list[dict[str, Any]] = []
+    page = 1
+    while True:
+        items = client.list_posts(page=page, number=100)
+        if not items:
+            break
+        posts.extend(items)
+        if len(items) < 100:
+            break
+        page += 1
+
+    if not posts:
+        print("No posts found.")
+        return
+
+    posts.sort(key=lambda p: p["date"])  # oldest first
+    print("Posts (oldest first):")
+    for p in posts:
+        print(f"{p['id']} - {p['title']} ({p['date']})")
+
+    try:
+        count = int(input("How many oldest posts to delete? ").strip())
+    except ValueError:  # pragma: no cover
         print("Invalid number")
         return
 
-    try:
-        with CONFIG_PATH.open() as f:
-            cfg = json.load(f)
-    except Exception as exc:  # pragma: no cover - simple CLI error handling
-        print(f"Failed to load config: {exc}")
-        return
-
-    accounts: dict[str, Any] = cfg.get("wordpress", {}).get("accounts", {})
-    if not accounts:
-        print("No WordPress accounts configured.")
-        return
-
-    for name, acct_cfg in accounts.items():
-        print(f"Processing account: {name}")
-        config = {"wordpress": {"accounts": {"default": acct_cfg}}}
-        client = WordpressClient(config)
+    for p in posts[:count]:
         try:
-            client.authenticate()
+            client.delete_post(p["id"])
+            print(f"Deleted post {p['id']}")
         except Exception as exc:  # pragma: no cover
-            print(f"Authentication failed for {name}: {exc}")
-            continue
+            print(f"Failed to delete post {p['id']}: {exc}")
 
-        posts: list[dict[str, Any]] = []
-        page = 1
-        while True:
-            items = client.list_posts(page=page, number=100)
-            if not items:
-                break
-            posts.extend(items)
-            if len(items) < 100:
-                break
-            page += 1
+    answer = input("Empty trash permanently? [y/N] ").strip().lower()
+    if answer == "y":
+        deleted = client.empty_trash()
+        print(f"Emptied trash, removed {len(deleted)} posts")
 
-        posts.sort(key=lambda p: p["date"])  # oldest first
-        delete_count = max(0, len(posts) - max_count)
-        deleted_posts = 0
-        for p in posts[:delete_count]:
-            try:
-                client.delete_post(p["id"])
-                deleted_posts += 1
-            except Exception as exc:  # pragma: no cover
-                print(f"Failed to delete post {p['id']}: {exc}")
-        if deleted_posts:
-            client.empty_trash()
-
+    answer = input("Delete unattached media? [y/N] ").strip().lower()
+    if answer == "y":
         info = client.get_site_info(fields="icon,logo")
         protected: set[str] = set()
         for key in ("icon", "logo"):
@@ -68,7 +88,7 @@ def main() -> None:
                     protected.add(val)
 
         page = 1
-        removed_media = 0
+        removed = 0
         while True:
             media = client.list_media(post_id=0, page=page, number=100)
             if not media:
@@ -79,16 +99,14 @@ def main() -> None:
                     continue
                 try:
                     client.delete_media(item["ID"])
-                    removed_media += 1
+                    removed += 1
+                    print(f"Deleted media {item['ID']}")
                 except Exception as exc:  # pragma: no cover - simple CLI error handling
                     print(f"Failed to delete media {item['ID']}: {exc}")
             if len(media) < 100:
                 break
             page += 1
-
-        print(
-            f"{name}: removed {deleted_posts} posts and {removed_media} unattached media items"
-        )
+        print(f"Removed {removed} unattached media items")
 
     print("Cleanup complete")
 
