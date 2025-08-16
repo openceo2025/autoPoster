@@ -2,11 +2,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-import requests
+import concurrent.futures
 
 from wordpress_client import WordpressClient
 
 CONFIG_PATH = Path("config.json")
+MAX_WORKERS = 5
 
 
 def main() -> None:
@@ -83,25 +84,24 @@ def main() -> None:
             if not media:
                 print("Processed 0 items")
                 break
-            for idx, item in enumerate(media):
-                url = item.get("URL")
-                if url and url in protected:
-                    continue
-                print(f"Deleting media {idx + 1}/{len(media)}: {item['ID']}")
-                for attempt in range(1, 4):
+            IDs = [m["ID"] for m in media if m.get("URL") not in protected]
+            print(f"Deleting {len(IDs)} media items")
+            deleted_batch = 0
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=MAX_WORKERS
+            ) as executor:
+                future_to_id = {
+                    executor.submit(client.delete_media, mid): mid for mid in IDs
+                }
+                for future in concurrent.futures.as_completed(future_to_id):
+                    mid = future_to_id[future]
                     try:
-                        client.delete_media(item["ID"])
-                        print("done", flush=True)
-                        removed_media += 1
-                        break
-                    except requests.exceptions.RequestException as exc:
-                        if attempt < 3:
-                            print(f"Retry deleting {item['ID']}: {exc}")
-                        else:
-                            print(f"Failed to delete media {item['ID']}: {exc}")
+                        future.result()
+                        deleted_batch += 1
                     except Exception as exc:  # pragma: no cover - simple CLI error handling
-                        print(f"Failed to delete media {item['ID']}: {exc}")
-                        break
+                        print(f"Failed to delete media {mid}: {exc}")
+            removed_media += deleted_batch
+            print(f"Deleted {deleted_batch} media items")
             print(f"Processed {len(media)} items")
             if len(media) < batch_size:
                 break
