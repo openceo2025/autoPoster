@@ -2,8 +2,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-import requests
-
 from wordpress_client import WordpressClient
 
 CONFIG_PATH = Path("config.json")
@@ -87,21 +85,15 @@ def main() -> None:
                 url = item.get("URL")
                 if url and url in protected:
                     continue
-                print(f"Deleting media {idx + 1}/{len(media)}: {item['ID']}")
-                for attempt in range(1, 4):
-                    try:
-                        client.delete_media(item["ID"])
-                        print("done", flush=True)
-                        removed_media += 1
-                        break
-                    except requests.exceptions.RequestException as exc:
-                        if attempt < 3:
-                            print(f"Retry deleting {item['ID']}: {exc}")
-                        else:
-                            print(f"Failed to delete media {item['ID']}: {exc}")
-                    except Exception as exc:  # pragma: no cover - simple CLI error handling
-                        print(f"Failed to delete media {item['ID']}: {exc}")
-                        break
+                try:
+                    print(
+                        f"Deleting media {idx + 1}/{len(media)}: {item['ID']}"
+                    )
+                    client.delete_media(item["ID"])
+                    print("done", flush=True)
+                    removed_media += 1
+                except Exception as exc:  # pragma: no cover - simple CLI error handling
+                    print(f"Failed to delete media {item['ID']}: {exc}")
             print(f"Processed {len(media)} items")
             if len(media) < batch_size:
                 break
