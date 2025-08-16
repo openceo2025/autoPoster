@@ -29,7 +29,7 @@ def test_client_list_posts(monkeypatch):
     client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
     captured = {}
 
-    def fake_get(url, headers=None, params=None):
+    def fake_get(url, headers=None, params=None, **kwargs):
         captured["url"] = url
         captured["params"] = params
         return DummyResp(
@@ -66,7 +66,7 @@ def test_client_list_posts_status(monkeypatch):
     client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
     captured = {}
 
-    def fake_get(url, headers=None, params=None):
+    def fake_get(url, headers=None, params=None, **kwargs):
         captured["params"] = params
         return DummyResp({"posts": []})
 
@@ -78,7 +78,7 @@ def test_client_list_posts_status(monkeypatch):
 def test_wordpress_posts_endpoint(monkeypatch):
     captured = {}
 
-    def fake_get(url, headers=None, params=None):
+    def fake_get(url, headers=None, params=None, **kwargs):
         captured["url"] = url
         captured["params"] = params
         return DummyResp(

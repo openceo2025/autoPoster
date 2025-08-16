@@ -31,7 +31,9 @@ def main() -> None:
         config = {"wordpress": {"accounts": {"default": acct_cfg}}}
         client = WordpressClient(config)
         try:
+            print("Authenticating...")
             client.authenticate()
+            print("Authenticated")
         except Exception as exc:  # pragma: no cover
             print(f"Authentication failed for {name}: {exc}")
             continue
@@ -39,7 +41,9 @@ def main() -> None:
         posts: list[dict[str, Any]] = []
         page = 1
         while True:
+            print(f"Fetching posts page {page}")
             items = client.list_posts(page=page, number=100)
+            print(f"Got {len(items)} posts")
             if not items:
                 break
             posts.extend(items)
@@ -70,8 +74,10 @@ def main() -> None:
         page = 1
         removed_media = 0
         while True:
+            print(f"Fetching media page {page}")
             media = client.list_media(post_id=0, page=page, number=100)
             if not media:
+                print("Processed 0 items")
                 break
             for item in media:
                 url = item.get("URL")
@@ -82,6 +88,7 @@ def main() -> None:
                     removed_media += 1
                 except Exception as exc:  # pragma: no cover - simple CLI error handling
                     print(f"Failed to delete media {item['ID']}: {exc}")
+            print(f"Processed {len(media)} items")
             if len(media) < 100:
                 break
             page += 1
