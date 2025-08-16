@@ -18,6 +18,9 @@ from services.wordpress_posts import (
     list_posts as service_list_posts,
     delete_posts as service_delete_posts,
 )
+from services.cleanup_wordpress_posts import (
+    cleanup_posts as service_cleanup_posts,
+)
 import os
 import tempfile
 
@@ -330,6 +333,15 @@ class WordpressPostRequest(BaseModel):
     json_ld: Optional[dict] = None
 
 
+class WordpressCleanupItem(BaseModel):
+    identifier: str
+    keep_latest: int
+
+
+class WordpressCleanupRequest(BaseModel):
+    items: List[WordpressCleanupItem]
+
+
 def post_to_mastodon(account: str, text: str, media: Optional[List[str]] = None):
     if account in MASTODON_ACCOUNT_ERRORS:
         return {"error": "Account misconfigured"}
@@ -533,6 +545,15 @@ async def wordpress_delete_posts(
     success = len(result.get("deleted", []))
     failed = len(result.get("errors", {}))
     return {**result, "success": success, "failed": failed}
+
+
+@app.post("/wordpress/cleanup")
+async def wordpress_cleanup(data: WordpressCleanupRequest):
+    results = []
+    for item in data.items:
+        result = service_cleanup_posts(item.identifier, item.keep_latest)
+        results.append(result)
+    return {"results": results}
 
 
 @app.get("/wordpress/stats/views")
