@@ -80,9 +80,7 @@ def main() -> None:
         removed_media = 0
         while True:
             print("Fetching media batch")
-            media = client.list_media(
-                post_id=0, page=1, number=batch_size, fields="ID,URL"
-            )
+            media = client.list_media(post_id=0, page=1, number=batch_size)
             if not media:
                 print("Processed 0 items")
                 break
