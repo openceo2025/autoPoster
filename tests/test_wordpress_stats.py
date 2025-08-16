@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 def test_wordpress_views_endpoint(monkeypatch):
     captured = {}
 
-    def fake_get(url, headers=None, params=None, **kwargs):
+    def fake_get(url, headers=None, params=None):
         captured["url"] = url
         captured["params"] = params
         class DummyResp:
@@ -49,7 +49,7 @@ def test_wordpress_views_endpoint(monkeypatch):
 def test_wordpress_views_no_data(monkeypatch):
     captured = {}
 
-    def fake_get(url, headers=None, params=None, **kwargs):
+    def fake_get(url, headers=None, params=None):
         captured["url"] = url
         captured["params"] = params
         class DummyResp:
@@ -84,7 +84,7 @@ def test_wordpress_views_no_data(monkeypatch):
 def test_wordpress_search_terms_endpoint(monkeypatch):
     captured = {}
 
-    def fake_get(url, headers=None, params=None, **kwargs):
+    def fake_get(url, headers=None, params=None):
         captured["url"] = url
         captured["params"] = params
         class DummyResp:
