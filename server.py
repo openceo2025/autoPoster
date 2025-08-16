@@ -24,7 +24,7 @@ from services.cleanup_wordpress_posts import (
 import os
 import tempfile
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, BackgroundTasks
 from pydantic import BaseModel
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
@@ -547,13 +547,32 @@ async def wordpress_delete_posts(
     return {**result, "success": success, "failed": failed}
 
 
+def _run_cleanup(identifier: str, keep_latest: int) -> None:
+    """Execute cleanup for a single WordPress account and log progress."""
+    print(f"[cleanup] Starting cleanup for {identifier}")
+    result = service_cleanup_posts(identifier, keep_latest)
+    error = result.get("error")
+    if error:
+        print(f"[cleanup] {identifier} error: {error}")
+        return
+    deleted = len(result.get("deleted_posts", []))
+    trash = result.get("trash_emptied", 0)
+    media = result.get("deleted_media", 0)
+    print(
+        f"[cleanup] {identifier} finished: deleted {deleted} posts, "
+        f"emptied trash {trash}, removed {media} media items",
+    )
+
+
 @app.post("/wordpress/cleanup")
-async def wordpress_cleanup(data: WordpressCleanupRequest):
-    results = []
+async def wordpress_cleanup(
+    data: WordpressCleanupRequest, background_tasks: BackgroundTasks
+):
     for item in data.items:
-        result = service_cleanup_posts(item.identifier, item.keep_latest)
-        results.append(result)
-    return {"results": results}
+        background_tasks.add_task(
+            _run_cleanup, item.identifier, item.keep_latest
+        )
+    return {"status": "accepted"}
 
 
 @app.get("/wordpress/stats/views")

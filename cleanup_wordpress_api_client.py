@@ -37,25 +37,16 @@ def main() -> None:
         for name in accounts.keys()
     ]
 
-    resp = requests.post(API_URL, json={"items": items})
-    if resp.status_code != 200:
-        print(f"Request failed ({resp.status_code}): {resp.text}")
+    try:
+        resp = requests.post(API_URL, json={"items": items}, timeout=5)
+    except Exception as exc:
+        print(f"Request failed: {exc}")
         return
 
-    data = resp.json()
-    for result in data.get("results", []):
-        account = result.get("account")
-        error = result.get("error")
-        if error:
-            print(f"{account}: {error}")
-        else:
-            deleted = len(result.get("deleted_posts", []))
-            trash = result.get("trash_emptied", 0)
-            media = result.get("deleted_media", 0)
-            print(
-                f"{account}: deleted {deleted} posts, emptied trash {trash}, "
-                f"removed {media} media items"
-            )
+    if resp.status_code == 200:
+        print("Cleanup request accepted. Check server logs for progress.")
+    else:
+        print(f"Request failed ({resp.status_code}): {resp.text}")
 
 
 if __name__ == "__main__":  # pragma: no cover

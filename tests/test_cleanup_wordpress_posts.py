@@ -53,13 +53,12 @@ def test_cleanup_service(monkeypatch):
 
 
 def test_cleanup_endpoint(monkeypatch):
-    called = []
+    called: list[tuple[str, int]] = []
 
-    def fake_cleanup(account, keep_latest):
-        called.append((account, keep_latest))
-        return {"account": account, "deleted_posts": []}
+    def fake_task(identifier: str, keep_latest: int) -> None:
+        called.append((identifier, keep_latest))
 
-    monkeypatch.setattr(server, "service_cleanup_posts", fake_cleanup)
+    monkeypatch.setattr(server, "_run_cleanup", fake_task)
     app = TestClient(server.app)
     resp = app.post(
         "/wordpress/cleanup",
@@ -71,10 +70,6 @@ def test_cleanup_endpoint(monkeypatch):
         },
     )
     assert resp.status_code == 200
+    assert resp.json() == {"status": "accepted"}
+    # Background tasks run after response in TestClient
     assert called == [("a1", 1), ("a2", 2)]
-    assert resp.json() == {
-        "results": [
-            {"account": "a1", "deleted_posts": []},
-            {"account": "a2", "deleted_posts": []},
-        ]
-    }
