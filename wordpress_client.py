@@ -243,11 +243,7 @@ class WordpressClient:
             raise RuntimeError(f"Fetching site info failed: {exc}") from exc
 
     def list_media(
-        self,
-        post_id: int | None = None,
-        page: int = 1,
-        number: int = 100,
-        fields: str | None = None,
+        self, post_id: int | None = None, page: int = 1, number: int = 100
     ) -> list[dict]:
         """Return media library items.
 
@@ -260,16 +256,11 @@ class WordpressClient:
             Page number to fetch.
         number: int
             Number of items per page (max 100).
-        fields: str | None
-            Optional comma-separated list of fields to return for each item,
-            e.g. ``"ID,URL"``.
         """
         url = f"{self.API_BASE.format(site=self.site)}/media"
         params = {"page": page, "number": number}
         if post_id is not None:
             params["post_ID"] = post_id
-        if fields is not None:
-            params["fields"] = fields
         resp: requests.Response | None = None
         try:
             resp = self.session.get(url, params=params, timeout=10)
