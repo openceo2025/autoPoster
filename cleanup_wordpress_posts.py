@@ -9,10 +9,7 @@ CONFIG_PATH = Path("config.json")
 
 def main() -> None:
     try:
-        batch_size = int(input("削除バッチサイズ: ").strip())
         max_count = int(input("最大投稿数: ").strip())
-        if batch_size <= 0:
-            raise ValueError
     except ValueError:  # pragma: no cover - simple CLI error handling
         print("Invalid number")
         return
@@ -74,10 +71,11 @@ def main() -> None:
                 if isinstance(val, str):
                     protected.add(val)
 
+        page = 1
         removed_media = 0
         while True:
-            print("Fetching media batch")
-            media = client.list_media(post_id=0, page=1, number=batch_size)
+            print(f"Fetching media page {page}")
+            media = client.list_media(post_id=0, page=page, number=100)
             if not media:
                 print("Processed 0 items")
                 break
@@ -95,8 +93,9 @@ def main() -> None:
                 except Exception as exc:  # pragma: no cover - simple CLI error handling
                     print(f"Failed to delete media {item['ID']}: {exc}")
             print(f"Processed {len(media)} items")
-            if len(media) < batch_size:
+            if len(media) < 100:
                 break
+            page += 1
 
         print(
             f"{name}: removed {deleted_posts} posts and {removed_media} unattached media items"
