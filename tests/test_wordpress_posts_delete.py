@@ -28,7 +28,7 @@ def test_client_delete_post(monkeypatch):
     client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
     captured = {}
 
-    def fake_post(url, params=None):
+    def fake_post(url, params=None, **kwargs):
         captured["url"] = url
         captured["params"] = params
         return DummyResp({"ID": 5})
@@ -47,7 +47,7 @@ def test_client_delete_post_force(monkeypatch):
     client = wordpress_client.WordpressClient({"wordpress": {"site": "mysite"}})
     captured = {}
 
-    def fake_post(url, params=None):
+    def fake_post(url, params=None, **kwargs):
         captured["url"] = url
         captured["params"] = params
         return DummyResp({"ID": 9})

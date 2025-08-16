@@ -29,7 +29,7 @@ def _make_client():
 def test_upload_media_uses_media(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, files):
+    def fake_post(url, files, **kwargs):
         return DummyResp({"media": [{"id": 1, "URL": "http://example/img.jpg"}]})
 
     monkeypatch.setattr(client.session, "post", fake_post)
@@ -40,7 +40,7 @@ def test_upload_media_uses_media(monkeypatch):
 def test_upload_media_source_url(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, files):
+    def fake_post(url, files, **kwargs):
         return DummyResp({"media": [{"id": 3, "source_url": "http://example/img2.jpg"}]})
 
     monkeypatch.setattr(client.session, "post", fake_post)
@@ -51,7 +51,7 @@ def test_upload_media_source_url(monkeypatch):
 def test_upload_media_fallback_link(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, files):
+    def fake_post(url, files, **kwargs):
         return DummyResp({"media": [{"id": 2, "link": "http://page"}]})
 
     monkeypatch.setattr(client.session, "post", fake_post)
@@ -72,7 +72,7 @@ def test_plan_id_default_none():
 def test_get_search_terms_parses_views(monkeypatch):
     client = _make_client()
 
-    def fake_get(url, headers=None, params=None):
+    def fake_get(url, headers=None, params=None, **kwargs):
         assert params == {"days": 7}
         return DummyResp({"search_terms": [["foo", 5], ["bar", 1]]})
 
@@ -87,7 +87,7 @@ def test_get_search_terms_parses_views(monkeypatch):
 def test_create_post_returns_link(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, json):
+    def fake_post(url, json, **kwargs):
         return DummyResp({"ID": 7, "URL": "http://example/post"})
 
     monkeypatch.setattr(client.session, "post", fake_post)
@@ -98,7 +98,7 @@ def test_create_post_returns_link(monkeypatch):
 def test_create_post_fallback_link(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, json):
+    def fake_post(url, json, **kwargs):
         return DummyResp({"ID": 8, "link": "http://example/alt"})
 
     monkeypatch.setattr(client.session, "post", fake_post)
@@ -111,7 +111,7 @@ def test_create_post_with_excerpt(monkeypatch):
 
     captured = {}
 
-    def fake_post(url, json):
+    def fake_post(url, json, **kwargs):
         captured["payload"] = json
         return DummyResp({"ID": 9, "URL": "http://example/post"})
 
@@ -124,7 +124,7 @@ def test_create_post_with_excerpt(monkeypatch):
 def test_get_site_info(monkeypatch):
     client = _make_client()
 
-    def fake_get(url, params=None):
+    def fake_get(url, params=None, **kwargs):
         assert params == {"fields": "icon,logo"}
         return DummyResp({"icon": {"img": "u"}})
 
@@ -136,11 +136,11 @@ def test_get_site_info(monkeypatch):
 def test_list_media_and_delete(monkeypatch):
     client = _make_client()
 
-    def fake_get(url, params=None):
+    def fake_get(url, params=None, **kwargs):
         assert params == {"page": 1, "number": 100, "post_ID": 0}
         return DummyResp({"media": [{"ID": 1}]})
 
-    def fake_post(url):
+    def fake_post(url, **kwargs):
         assert url.endswith("/media/1/delete")
         return DummyResp({})
 
@@ -154,7 +154,7 @@ def test_list_media_and_delete(monkeypatch):
 def test_update_media_alt_text(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, json):
+    def fake_post(url, json, **kwargs):
         assert url.endswith("/media/5")
         assert json == {"alt_text": "New alt"}
         return DummyResp({"id": 5, "alt_text": "New alt"})
@@ -167,7 +167,7 @@ def test_update_media_alt_text(monkeypatch):
 def test_update_media_alt_text_error(monkeypatch):
     client = _make_client()
 
-    def fake_post(url, json):
+    def fake_post(url, json, **kwargs):
         raise Exception("fail")
 
     monkeypatch.setattr(client.session, "post", fake_post)

@@ -44,7 +44,7 @@ class WordpressClient:
         }
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(self.TOKEN_URL, data=data)
+            resp = self.session.post(self.TOKEN_URL, data=data, timeout=10)
             logger.debug(
                 "Auth response status: %s, body: [redacted]", resp.status_code
             )
@@ -68,7 +68,7 @@ class WordpressClient:
         resp: requests.Response | None = None
         try:
             print(f"POST {url} with {filename}, {len(content)} bytes")
-            resp = self.session.post(url, files=files)
+            resp = self.session.post(url, files=files, timeout=10)
             print(resp.status_code, resp.text)
             print(getattr(resp, "headers", None))
             resp.raise_for_status()
@@ -119,7 +119,7 @@ class WordpressClient:
         resp: requests.Response | None = None
         try:
             print(f"POST {url} payload: {payload}")
-            resp = self.session.post(url, json=payload)
+            resp = self.session.post(url, json=payload, timeout=10)
             print(resp.status_code, resp.text)
             resp.raise_for_status()
             data = resp.json()
@@ -152,7 +152,9 @@ class WordpressClient:
             params["status"] = status
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp = self.session.get(
+                url, headers=self.session.headers, params=params, timeout=10
+            )
             resp.raise_for_status()
             data = resp.json()
             posts: list[dict] = []
@@ -186,7 +188,7 @@ class WordpressClient:
         params = {"force": 1} if permanent else None
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url, params=params)
+            resp = self.session.post(url, params=params, timeout=10)
             resp.raise_for_status()
             return post_id
         except Exception as exc:
@@ -232,7 +234,7 @@ class WordpressClient:
         params = {"fields": fields} if fields else None
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, params=params)
+            resp = self.session.get(url, params=params, timeout=10)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -261,7 +263,7 @@ class WordpressClient:
             params["post_ID"] = post_id
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, params=params)
+            resp = self.session.get(url, params=params, timeout=10)
             resp.raise_for_status()
             return resp.json().get("media", [])
         except Exception as exc:
@@ -275,7 +277,7 @@ class WordpressClient:
         payload = {"alt_text": alt_text}
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url, json=payload)
+            resp = self.session.post(url, json=payload, timeout=10)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -290,7 +292,7 @@ class WordpressClient:
         url = f"{self.API_BASE.format(site=self.site)}/media/{media_id}/delete"
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url)
+            resp = self.session.post(url, timeout=10)
             resp.raise_for_status()
             return media_id
         except Exception as exc:
@@ -304,7 +306,9 @@ class WordpressClient:
         params = {"unit": "day", "quantity": days}
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp = self.session.get(
+                url, headers=self.session.headers, params=params, timeout=10
+            )
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -318,7 +322,9 @@ class WordpressClient:
         params = {"days": days}
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp = self.session.get(
+                url, headers=self.session.headers, params=params, timeout=10
+            )
             resp.raise_for_status()
             data = resp.json()
             terms = data.get("search_terms", [])
