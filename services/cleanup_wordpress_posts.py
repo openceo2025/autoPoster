@@ -38,6 +38,8 @@ def cleanup_posts(account: str, keep_latest: int) -> Dict[str, Any]:
     delete_count = len(posts) - keep_latest
     if delete_count <= 0:
         return {"account": account, "deleted_posts": [], "deleted_media": 0}
+    print(f"[cleanup] {account}: fetched {len(posts)} posts")
+    print(f"[cleanup] {account}: deleting {delete_count} posts")
 
     deleted: List[int] = []
     errors: Dict[str, str] = {}
@@ -47,12 +49,15 @@ def cleanup_posts(account: str, keep_latest: int) -> Dict[str, Any]:
             deleted.append(p["id"])
         except Exception as exc:
             errors[str(p["id"])] = str(exc)
+    print(f"[cleanup] {account}: deleted {len(deleted)} posts")
 
     try:
+        print(f"[cleanup] {account}: emptying trash")
         trash = client.empty_trash()
         trash_count = len(trash) if isinstance(trash, list) else 0
     except Exception:
         trash_count = 0
+    print(f"[cleanup] {account}: trash emptied {trash_count}")
 
     info = client.get_site_info(fields="icon,logo")
     protected: set[str] = set()
@@ -64,6 +69,7 @@ def cleanup_posts(account: str, keep_latest: int) -> Dict[str, Any]:
 
     removed = 0
     page = 1
+    print(f"[cleanup] {account}: removing unattached media")
     while True:
         media = client.list_media(post_id=0, page=page, number=100)
         if not media:
@@ -80,6 +86,7 @@ def cleanup_posts(account: str, keep_latest: int) -> Dict[str, Any]:
         if len(media) < 100:
             break
         page += 1
+    print(f"[cleanup] {account}: removed {removed} media items")
 
     return {
         "account": account,

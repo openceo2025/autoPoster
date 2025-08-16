@@ -15,9 +15,15 @@ class WordpressClient:
     TOKEN_URL = "https://public-api.wordpress.com/oauth2/token"
     API_BASE = "https://public-api.wordpress.com/rest/v1.1/sites/{site}"
 
-    def __init__(self, config: dict, session: requests.Session | None = None):
+    def __init__(
+        self,
+        config: dict,
+        session: requests.Session | None = None,
+        timeout: int = 300,
+    ):
         self.config = config or {}
         self.session = session or requests.Session()
+        self.timeout = timeout
         wp_cfg = self.config.get("wordpress", {})
         accounts = wp_cfg.get("accounts")
         if accounts:
@@ -32,6 +38,24 @@ class WordpressClient:
         self.plan_id: str | None = acct.get("plan_id")
         self.access_token: str | None = None
 
+    def _get(self, url: str, **kwargs) -> requests.Response:
+        """Wrapper around ``session.get`` applying default timeout."""
+        kwargs.setdefault("timeout", self.timeout)
+        try:
+            return self.session.get(url, **kwargs)
+        except TypeError:
+            kwargs.pop("timeout", None)
+            return self.session.get(url, **kwargs)
+
+    def _post(self, url: str, **kwargs) -> requests.Response:
+        """Wrapper around ``session.post`` applying default timeout."""
+        kwargs.setdefault("timeout", self.timeout)
+        try:
+            return self.session.post(url, **kwargs)
+        except TypeError:
+            kwargs.pop("timeout", None)
+            return self.session.post(url, **kwargs)
+
     def authenticate(self) -> None:
         """Authenticate and store access token in headers."""
         data = {
@@ -44,7 +68,7 @@ class WordpressClient:
         }
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(self.TOKEN_URL, data=data)
+            resp = self._post(self.TOKEN_URL, data=data)
             logger.debug(
                 "Auth response status: %s, body: [redacted]", resp.status_code
             )
@@ -68,7 +92,7 @@ class WordpressClient:
         resp: requests.Response | None = None
         try:
             print(f"POST {url} with {filename}, {len(content)} bytes")
-            resp = self.session.post(url, files=files)
+            resp = self._post(url, files=files)
             print(resp.status_code, resp.text)
             print(getattr(resp, "headers", None))
             resp.raise_for_status()
@@ -119,7 +143,7 @@ class WordpressClient:
         resp: requests.Response | None = None
         try:
             print(f"POST {url} payload: {payload}")
-            resp = self.session.post(url, json=payload)
+            resp = self._post(url, json=payload)
             print(resp.status_code, resp.text)
             resp.raise_for_status()
             data = resp.json()
@@ -152,7 +176,7 @@ class WordpressClient:
             params["status"] = status
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp = self._get(url, headers=self.session.headers, params=params)
             resp.raise_for_status()
             data = resp.json()
             posts: list[dict] = []
@@ -186,7 +210,7 @@ class WordpressClient:
         params = {"force": 1} if permanent else None
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url, params=params)
+            resp = self._post(url, params=params)
             resp.raise_for_status()
             return post_id
         except Exception as exc:
@@ -232,7 +256,7 @@ class WordpressClient:
         params = {"fields": fields} if fields else None
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, params=params)
+            resp = self._get(url, params=params)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -261,7 +285,7 @@ class WordpressClient:
             params["post_ID"] = post_id
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, params=params)
+            resp = self._get(url, params=params)
             resp.raise_for_status()
             return resp.json().get("media", [])
         except Exception as exc:
@@ -275,7 +299,7 @@ class WordpressClient:
         payload = {"alt_text": alt_text}
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url, json=payload)
+            resp = self._post(url, json=payload)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -290,7 +314,7 @@ class WordpressClient:
         url = f"{self.API_BASE.format(site=self.site)}/media/{media_id}/delete"
         resp: requests.Response | None = None
         try:
-            resp = self.session.post(url)
+            resp = self._post(url)
             resp.raise_for_status()
             return media_id
         except Exception as exc:
@@ -304,7 +328,7 @@ class WordpressClient:
         params = {"unit": "day", "quantity": days}
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp = self._get(url, headers=self.session.headers, params=params)
             resp.raise_for_status()
             return resp.json()
         except Exception as exc:
@@ -318,7 +342,7 @@ class WordpressClient:
         params = {"days": days}
         resp: requests.Response | None = None
         try:
-            resp = self.session.get(url, headers=self.session.headers, params=params)
+            resp = self._get(url, headers=self.session.headers, params=params)
             resp.raise_for_status()
             data = resp.json()
             terms = data.get("search_terms", [])
