@@ -392,6 +392,34 @@ Sample response:
 
 If an individual deletion fails, the `errors` object maps the post ID to an error message and the `failed` count is incremented.
 
+### `POST /wordpress/cleanup`
+
+Remove old posts and unattached media for one or more WordPress.com accounts.
+
+Request body:
+
+```json
+{
+  "items": [
+    { "identifier": "account1", "keep_latest": 10 },
+    { "identifier": "account2", "keep_latest": 5 }
+  ]
+}
+```
+
+For each identifier, the API keeps the specified number of most recent posts and deletes older ones. If an identifier does not match any account in `config.json`, the result contains an `error` field. After deleting posts, the trash is emptied and unattached media are removed automatically.
+
+Sample response:
+
+```json
+{
+  "results": [
+    { "account": "account1", "deleted_posts": [1, 2], "errors": {}, "trash_emptied": 2, "deleted_media": 3 },
+    { "account": "unknown", "error": "Account not found" }
+  ]
+}
+```
+
 ### `POST /note/draft`
 
 Create a draft on a configured Note account. Specify the account name in
