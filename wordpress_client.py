@@ -1,4 +1,5 @@
 import logging
+import time
 import requests
 
 
@@ -321,6 +322,53 @@ class WordpressClient:
             if resp is not None:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Media deletion failed: {exc}") from exc
+
+    def get_daily_views(self, post_ids: list[int], day: str) -> dict[int, int]:
+        """Return view counts for multiple posts on a given day.
+
+        Parameters
+        ----------
+        post_ids: list[int]
+            IDs of posts to fetch views for.
+        day: str
+            Day in ``YYYY-MM-DD`` format.
+
+        Returns
+        -------
+        dict[int, int]
+            Mapping of post ID to view count.
+        """
+        if not post_ids:
+            return {}
+
+        url = f"{self.API_BASE.format(site=self.site)}/stats/views/posts"
+        results: dict[int, int] = {}
+        resp: requests.Response | None = None
+        for i in range(0, len(post_ids), 100):
+            batch = post_ids[i : i + 100]
+            params = {
+                "post_ids": ",".join(str(pid) for pid in batch),
+                "num": 1,
+                "date": day,
+            }
+            try:
+                resp = self._get(url, headers=self.session.headers, params=params)
+                resp.raise_for_status()
+                data = resp.json()
+                for item in data.get("posts", []):
+                    pid = item.get("id") or item.get("post_id") or item.get("ID")
+                    views = item.get("views") or item.get("count")
+                    if pid is not None and views is not None:
+                        results[int(pid)] = int(views)
+            except Exception as exc:
+                if resp is not None:
+                    print(resp.status_code, getattr(resp, "text", ""))
+                raise RuntimeError(
+                    f"Fetching daily views failed: {exc}"
+                ) from exc
+            if i + 100 < len(post_ids):
+                time.sleep(0.1)
+        return results
 
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
