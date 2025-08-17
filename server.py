@@ -21,6 +21,9 @@ from services.wordpress_posts import (
 from services.cleanup_wordpress_posts import (
     cleanup_posts as service_cleanup_posts,
 )
+from services.wordpress_pv_csv import (
+    export_views as service_export_views,
+)
 import os
 import tempfile
 
@@ -590,6 +593,20 @@ async def wordpress_search_terms(
     account: str | None = None,
 ):
     return service_get_search_terms(account, days)
+
+
+@app.post("/wordpress/stats/pv-csv")
+async def wordpress_pv_csv(
+    background_tasks: BackgroundTasks,
+    days: int = Query(30, gt=0, le=30),
+    out_dir: str | None = Query(None),
+):
+    accounts = CONFIG.get("wordpress", {}).get("accounts", {})
+    output_path = Path(out_dir) if out_dir else Path(tempfile.gettempdir())
+    background_tasks.add_task(
+        service_export_views, accounts, days, output_path
+    )
+    return {"status": "accepted"}
 
 
 @app.post("/note/draft")
