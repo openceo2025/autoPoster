@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+from datetime import datetime
 from pathlib import Path
 import sys
 
@@ -33,8 +34,19 @@ def test_export_views_generates_csv(monkeypatch, tmp_path):
 
     monkeypatch.setattr(wp_pv_csv, "create_wp_client", fake_create_wp_client)
 
+    class FixedDateTime:
+        @classmethod
+        def now(cls):
+            return datetime(2023, 1, 2, 3, 4, 5)
+
+    monkeypatch.setattr(wp_pv_csv, "datetime", FixedDateTime)
+
     results = wp_pv_csv.export_views({"dummy": {}}, 1, tmp_path)
-    csv_path = tmp_path / "views.csv"
+
+    csv_files = list(tmp_path.glob("pv_*.csv"))
+    assert len(csv_files) == 1
+    csv_path = csv_files[0]
+    assert csv_path.name == "pv_20230102_030405.csv"
     assert results == {"file": str(csv_path)}
 
     with csv_path.open(encoding="utf-8") as fh:
@@ -45,7 +57,7 @@ def test_export_views_generates_csv(monkeypatch, tmp_path):
     assert rows[2] == ["dummy", "mysite", "2", "Post 2", "5"]
 
 
-def test_wordpress_pv_csv_endpoint(monkeypatch, tmp_path):
+def test_wordpress_pv_csv_endpoint(monkeypatch):
     called: dict[str, object] = {}
 
     def fake_add_task(self, func, *args, **kwargs):  # noqa: ARG001
@@ -63,11 +75,9 @@ def test_wordpress_pv_csv_endpoint(monkeypatch, tmp_path):
     monkeypatch.setattr(server, "CONFIG", cfg, raising=False)
 
     client = TestClient(server.app)
-    resp = client.post(
-        "/wordpress/stats/pv-csv",
-        params={"days": 5, "out_dir": str(tmp_path)},
-    )
+    resp = client.post("/wordpress/stats/pv-csv", params={"days": 5})
     assert resp.status_code == 200
     assert resp.json() == {"status": "accepted"}
     assert called["func"] is fake_export
-    assert called["args"] == (cfg["wordpress"]["accounts"], 5, tmp_path)
+    expected_dir = Path(server.__file__).resolve().parent / "csv"
+    assert called["args"] == (cfg["wordpress"]["accounts"], 5, expected_dir)

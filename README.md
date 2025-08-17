@@ -364,8 +364,9 @@ You can generate the same statistics without running the server:
 python generate_pv_csv.py --days 7 --out-dir csv
 ```
 
-A single file named `views.csv` is produced in the specified directory, with one
-row per post and the account name in the first column.
+A single file named `pv_<timestamp>.csv` (e.g., `pv_20230102_030405.csv`) is
+produced in the specified directory, with one row per post and the account name
+in the first column.
 
 ### `GET /wordpress/posts`
 

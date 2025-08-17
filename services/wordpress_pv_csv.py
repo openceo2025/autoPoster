@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from pathlib import Path
 from typing import Dict, Any
 
@@ -35,7 +35,8 @@ def export_views(accounts: dict, days: int, out_dir: Path) -> Dict[str, Any]:
         for i in range(days)
     ]
 
-    csv_path = out_dir / "views.csv"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_path = out_dir / f"pv_{timestamp}.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         header = ["account", "site", "post_id", "title"] + [
