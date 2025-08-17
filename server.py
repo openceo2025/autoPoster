@@ -21,7 +21,6 @@ from services.wordpress_posts import (
 from services.cleanup_wordpress_posts import (
     cleanup_posts as service_cleanup_posts,
 )
-import services.wordpress_pv_csv as wordpress_pv_csv
 import os
 import tempfile
 
@@ -591,18 +590,6 @@ async def wordpress_search_terms(
     account: str | None = None,
 ):
     return service_get_search_terms(account, days)
-
-
-@app.post("/wordpress/stats/pv-csv")
-async def wordpress_pv_csv_endpoint(
-    background_tasks: BackgroundTasks,
-    days: int = Query(30, gt=0, le=30),
-    account: str | None = None,
-):
-    background_tasks.add_task(
-        wordpress_pv_csv.export_views, days=days, account=account
-    )
-    return {"status": "accepted"}
 
 
 @app.post("/note/draft")
