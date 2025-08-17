@@ -34,15 +34,15 @@ def test_export_views_generates_csv(monkeypatch, tmp_path):
     monkeypatch.setattr(wp_pv_csv, "create_wp_client", fake_create_wp_client)
 
     results = wp_pv_csv.export_views({"dummy": {}}, 1, tmp_path)
-    csv_path = tmp_path / "dummy_views.csv"
-    assert results == {"dummy": {"file": str(csv_path)}}
+    csv_path = tmp_path / "views.csv"
+    assert results == {"file": str(csv_path)}
 
     with csv_path.open(encoding="utf-8") as fh:
         rows = list(csv.reader(fh))
 
-    assert rows[0] == ["site", "post_id", "title", "pv_day1"]
-    assert rows[1] == ["mysite", "1", "Post 1", "3"]
-    assert rows[2] == ["mysite", "2", "Post 2", "5"]
+    assert rows[0] == ["account", "site", "post_id", "title", "pv_day1"]
+    assert rows[1] == ["dummy", "mysite", "1", "Post 1", "3"]
+    assert rows[2] == ["dummy", "mysite", "2", "Post 2", "5"]
 
 
 def test_wordpress_pv_csv_endpoint(monkeypatch, tmp_path):

@@ -348,7 +348,7 @@ Query parameters:
 - `out_dir`: Directory to write the CSV files to. Use `csv` to save them under the built-in `csv/` folder.
 
 The generated CSV has columns in the order
-`site, post_id, page_name, pv_day1 … pv_day7` when `days` is set to `7`.
+`account, site, post_id, title, pv_day1 … pv_day7` when `days` is set to `7`.
 
 Example using `curl`:
 
@@ -364,8 +364,8 @@ You can generate the same statistics without running the server:
 python generate_pv_csv.py --days 7 --out-dir csv
 ```
 
-Each WordPress account produces a file named `<account>_views.csv` in the specified
-directory.
+A single file named `views.csv` is produced in the specified directory, with one
+row per post and the account name in the first column.
 
 ### `GET /wordpress/posts`
 
