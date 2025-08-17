@@ -338,6 +338,38 @@ Sample response:
 }
 ```
 
+### `GET /wordpress/stats/pv-csv`
+
+Export page-view statistics for recent posts as a CSV file.
+
+Query parameters:
+
+- `account`: WordPress account name from `config.json`.
+- `days`: Number of days of statistics to include.
+
+Example using `curl`:
+
+```bash
+curl -o stats/pv.csv "http://localhost:8765/wordpress/stats/pv-csv?account=account1&days=30"
+```
+
+The generated CSV contains the following columns in order:
+
+1. `post_id`
+2. `title`
+3. `link`
+4. `views`
+
+Files are saved under the `stats` directory.
+
+To run the export as a standalone script without the server, execute:
+
+```bash
+python generate_pv_csv.py
+```
+
+This writes the same CSV to the `stats` directory.
+
 ### `GET /wordpress/posts`
 
 List recent posts on a WordPress.com site.
