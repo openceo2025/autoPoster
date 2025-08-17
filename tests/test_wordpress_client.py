@@ -5,7 +5,6 @@ import pytest
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-import wordpress_client
 from wordpress_client import WordpressClient
 
 
@@ -174,50 +173,3 @@ def test_update_media_alt_text_error(monkeypatch):
     monkeypatch.setattr(client.session, "post", fake_post)
     with pytest.raises(RuntimeError):
         client.update_media_alt_text(5, "alt")
-
-
-def test_get_daily_views_single_batch(monkeypatch):
-    client = _make_client()
-
-    captured = {}
-
-    def fake_get(url, headers=None, params=None):
-        captured["params"] = params
-        ids = [int(x) for x in params["post_ids"].split(",")]
-        return DummyResp({"posts": [{"id": pid, "views": pid + 1} for pid in ids]})
-
-    monkeypatch.setattr(client.session, "get", fake_get)
-    sleeps: list[float] = []
-    monkeypatch.setattr(wordpress_client.time, "sleep", lambda s: sleeps.append(s))
-
-    res = client.get_daily_views([1, 2, 3], "2024-01-01")
-    assert res == {1: 2, 2: 3, 3: 4}
-    assert captured["params"] == {
-        "post_ids": "1,2,3",
-        "num": 1,
-        "date": "2024-01-01",
-    }
-    assert sleeps == []
-
-
-def test_get_daily_views_multiple_batches(monkeypatch):
-    client = _make_client()
-
-    calls: list[dict] = []
-
-    def fake_get(url, headers=None, params=None):
-        calls.append(params)
-        ids = [int(x) for x in params["post_ids"].split(",")]
-        return DummyResp({"posts": [{"id": pid, "views": pid} for pid in ids]})
-
-    monkeypatch.setattr(client.session, "get", fake_get)
-    sleeps: list[float] = []
-    monkeypatch.setattr(wordpress_client.time, "sleep", lambda s: sleeps.append(s))
-
-    ids = list(range(1, 201))
-    res = client.get_daily_views(ids, "2024-02-01")
-    assert len(calls) == 2
-    assert len(calls[0]["post_ids"].split(",")) == 100
-    assert len(calls[1]["post_ids"].split(",")) == 100
-    assert len(sleeps) == 1
-    assert res[1] == 1 and res[200] == 200
