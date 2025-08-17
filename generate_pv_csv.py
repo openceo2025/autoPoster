@@ -55,12 +55,11 @@ def main() -> None:
         print("No WordPress accounts configured")
         return
 
-    results = export_views(accounts, args.days, args.out_dir)
-    for name, info in results.items():
-        if "file" in info:
-            print(f"{name}: {info['file']}")
-        else:
-            print(f"{name}: error - {info.get('error', 'unknown error')}")
+    result = export_views(accounts, args.days, args.out_dir)
+    if "file" in result:
+        print(result["file"])
+    else:
+        print(f"error - {result.get('error', 'unknown error')}")
 
 
 if __name__ == "__main__":  # pragma: no cover - simple CLI
