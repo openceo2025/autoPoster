@@ -173,3 +173,15 @@ def test_update_media_alt_text_error(monkeypatch):
     monkeypatch.setattr(client.session, "post", fake_post)
     with pytest.raises(RuntimeError):
         client.update_media_alt_text(5, "alt")
+
+
+def test_get_daily_views_parses_views(monkeypatch):
+    client = _make_client()
+
+    def fake_get(url, headers=None, params=None):
+        assert params == {"unit": "day", "quantity": 3}
+        return DummyResp({"days": [{"views": 4}, {"views": 2}, {"views": 1}]})
+
+    monkeypatch.setattr(client.session, "get", fake_get)
+    views = client.get_daily_views(10, 3)
+    assert views == [4, 2, 1]

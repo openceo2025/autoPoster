@@ -322,6 +322,54 @@ class WordpressClient:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Media deletion failed: {exc}") from exc
 
+    def get_daily_views(self, post_id: int, days: int) -> list[int]:
+        """Return daily view counts for a post.
+
+        Parameters
+        ----------
+        post_id: int
+            ID of the post to fetch statistics for.
+        days: int
+            Number of days to retrieve.
+        """
+        url = f"{self.API_BASE.format(site=self.site)}/stats/post/{post_id}"
+        params = {"unit": "day", "quantity": days}
+        resp: requests.Response | None = None
+        try:
+            resp = self._get(url, headers=self.session.headers, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            if not isinstance(data, dict):
+                return []
+            items = []
+            if isinstance(data.get("data"), list):
+                items = data["data"]
+            elif isinstance(data.get("days"), list):
+                items = data["days"]
+            elif isinstance(data.get("views"), list):
+                return [int(v) for v in data["views"]]
+            views: list[int] = []
+            for item in items:
+                if isinstance(item, dict):
+                    v = item.get("views")
+                    if v is not None:
+                        views.append(int(v))
+                elif isinstance(item, (list, tuple)) and len(item) >= 2:
+                    try:
+                        views.append(int(item[1]))
+                    except (ValueError, TypeError):
+                        views.append(0)
+                else:
+                    try:
+                        views.append(int(item))
+                    except (ValueError, TypeError):
+                        views.append(0)
+            return views
+        except Exception as exc:
+            if resp is not None:
+                print(resp.status_code, resp.text)
+            raise RuntimeError(f"Fetching daily views failed: {exc}") from exc
+
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
         url = f"{self.API_BASE.format(site=self.site)}/stats/post/{post_id}"
