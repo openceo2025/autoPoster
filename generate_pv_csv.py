@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import tempfile
 from pathlib import Path
 
 from services.wordpress_pv_csv import export_views
@@ -37,7 +36,7 @@ def main() -> None:
     parser.add_argument(
         "--out-dir",
         type=Path,
-        default=Path(tempfile.gettempdir()),
+        default=Path(__file__).resolve().parent / "csv",
         help="Directory to write CSV files to.",
     )
     args = parser.parse_args()

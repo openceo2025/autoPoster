@@ -602,7 +602,11 @@ async def wordpress_pv_csv(
     out_dir: str | None = Query(None),
 ):
     accounts = CONFIG.get("wordpress", {}).get("accounts", {})
-    output_path = Path(out_dir) if out_dir else Path(tempfile.gettempdir())
+    output_path = (
+        Path(out_dir)
+        if out_dir
+        else Path(__file__).resolve().parent / "csv"
+    )
     background_tasks.add_task(
         service_export_views, accounts, days, output_path
     )
