@@ -1,4 +1,5 @@
 import logging
+import time
 import requests
 
 
@@ -321,6 +322,45 @@ class WordpressClient:
             if resp is not None:
                 print(resp.status_code, resp.text)
             raise RuntimeError(f"Media deletion failed: {exc}") from exc
+
+    def get_daily_views(self, post_ids: list[int], day: str) -> dict[int, int]:
+        """Return view counts for the given posts on a specific day.
+
+        Parameters
+        ----------
+        post_ids: list[int]
+            List of WordPress post IDs to fetch.
+        day: str
+            Target day in ``YYYY-MM-DD`` format.
+        """
+        url = f"{self.API_BASE.format(site=self.site)}/stats/views/posts"
+        headers = self.session.headers
+        results: dict[int, int] = {}
+        resp: requests.Response | None = None
+        for i in range(0, len(post_ids), 100):
+            batch = post_ids[i : i + 100]
+            params = {
+                "post_ids": ",".join(str(pid) for pid in batch),
+                "day": day,
+            }
+            try:
+                resp = self._get(url, headers=headers, params=params)
+                resp.raise_for_status()
+                data = resp.json() or {}
+                views = data.get("views") or {}
+                for pid_str, count in views.items():
+                    try:
+                        results[int(pid_str)] = int(count)
+                    except (ValueError, TypeError):
+                        continue
+            except Exception as exc:
+                if resp is not None:
+                    print(resp.status_code, getattr(resp, "text", ""))
+                raise RuntimeError(
+                    f"Fetching daily views failed: {exc}"
+                ) from exc
+            time.sleep(1)
+        return results
 
     def get_post_views(self, post_id: int, days: int) -> dict:
         """Return view statistics for a post over a number of days."""
